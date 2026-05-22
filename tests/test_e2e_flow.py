@@ -38,22 +38,27 @@ def test_search_and_filter_prices(page: Page):
         f"Expected {limit_count} products added to cart, got {len(results)}"
     )
 
-    print("\n[Test] Step 4: Validating total cart amount against maximum budget...")
-    
+    # assertCartTotalNotExceeds: read subtotal from cart page; assert in test only
+    items_count = len(results)
+    print(
+        f"\n[Test] Step 4: Validating cart subtotal "
+        f"(budget ${target_price} × {items_count} items)..."
+    )
+
     cart_page.navigate_to_cart()
-    
     actual_cart_total = cart_page.get_cart_total()
-    
-    max_allowed_budget = target_price * limit_count
-    print(f"[Test] Actual Cart Total: ${actual_cart_total} | Max Allowed Budget: ${max_allowed_budget} (${target_price} * {limit_count})")
-    
+    max_allowed_budget = target_price * items_count
+
+    print(
+        f"[Test] Actual cart subtotal: ${actual_cart_total} | "
+        f"Max allowed: ${max_allowed_budget} (${target_price} × {items_count})"
+    )
+
     os.makedirs("logs/screenshots", exist_ok=True)
     cart_page.page.screenshot(path="logs/screenshots/final_cart_page.png")
     print("[Log] Saved final cart screenshot at logs/screenshots/final_cart_page.png")
 
     assert actual_cart_total <= max_allowed_budget, (
-        f"Cart total code violation: Total amount (${actual_cart_total}) "
-        f"exceeds calculated maximum budget limit of (${max_allowed_budget})"
-    )
-    
+        f"Cart total (${actual_cart_total}) exceeds budget (${max_allowed_budget})"
+    )    
     print("[Test] Success! Cart total validation passed flawlessly.")
