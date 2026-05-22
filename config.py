@@ -4,7 +4,6 @@ import json
 
 load_dotenv()
 
-IS_CI = os.getenv("GITHUB_ACTIONS") == "true"
 SHORT_TIMEOUT = 5000
 DEFAULT_TIMEOUT = 10000
 LONG_TIMEOUT = 20000
