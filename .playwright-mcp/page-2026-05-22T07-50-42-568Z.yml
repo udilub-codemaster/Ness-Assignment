@@ -1,0 +1,538 @@
+- generic [active] [ref=e1]:
+  - img
+  - img
+  - banner [ref=e5]:
+    - link "Skip to main content" [ref=e7] [cursor=pointer]:
+      - /url: "#mainContent"
+    - navigation [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e11]:
+          - text: Hi!
+          - link "Sign in" [ref=e12] [cursor=pointer]:
+            - /url: https://signin.ebay.com/ws/eBayISAPI.dll?SignIn&sgfl=gh&ru=https%3A%2F%2Fwww.ebay.com%2F
+          - generic [ref=e13]:
+            - text: or
+            - link "register" [ref=e14] [cursor=pointer]:
+              - /url: https://signup.ebay.com/pa/crte?ru=https%3A%2F%2Fwww.ebay.com%2F
+        - link "Daily Deals" [ref=e16] [cursor=pointer]:
+          - /url: https://www.ebay.com/deals
+        - link "Help & Contact" [ref=e18] [cursor=pointer]:
+          - /url: https://www.ebay.com/help/home
+      - generic [ref=e19]:
+        - button "Ship to" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: Ship to
+        - link "Sell" [ref=e24] [cursor=pointer]:
+          - /url: https://www.ebay.com/sl/sell
+        - generic [ref=e25]:
+          - link "My eBay" [ref=e26] [cursor=pointer]:
+            - /url: https://www.ebay.com/mys/home?source=GBH
+            - generic [ref=e27]: My eBay
+            - img
+          - button "Expand My eBay" [ref=e28]
+        - button "Notifications" [ref=e31] [cursor=pointer]:
+          - img
+          - generic [ref=e32]: Notifications
+        - generic [ref=e34]:
+          - link "Your shopping cart contains 0 items" [ref=e35] [cursor=pointer]:
+            - /url: https://cart.ebay.com
+            - generic "Your shopping cart contains 0 items" [ref=e36]:
+              - img
+          - button "Expand Cart" [ref=e37]
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - link "eBay Home" [ref=e40] [cursor=pointer]:
+          - /url: https://www.ebay.com
+          - img "eBay Home" [ref=e41]
+        - button "Shop by category" [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]: Shop by category
+          - img
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - combobox "Search for anything" [ref=e55]
+            - img
+          - combobox "Select a category for search" [ref=e56]:
+            - option "All Categories" [selected]
+            - option "Antiques"
+            - option "Art"
+            - option "Baby"
+            - option "Books"
+            - option "Business & Industrial"
+            - option "Cameras & Photo"
+            - option "Cell Phones & Accessories"
+            - option "Clothing, Shoes & Accessories"
+            - option "Coins & Paper Money"
+            - option "Collectibles"
+            - option "Computers/Tablets & Networking"
+            - option "Consumer Electronics"
+            - option "Crafts"
+            - option "Dolls & Bears"
+            - option "Movies & TV"
+            - option "eBay Motors"
+            - option "Entertainment Memorabilia"
+            - option "Gift Cards & Coupons"
+            - option "Health & Beauty"
+            - option "Home & Garden"
+            - option "Jewelry & Watches"
+            - option "Music"
+            - option "Musical Instruments & Gear"
+            - option "Pet Supplies"
+            - option "Pottery & Glass"
+            - option "Real Estate"
+            - option "Specialty Services"
+            - option "Sporting Goods"
+            - option "Sports Mem, Cards & Fan Shop"
+            - option "Stamps"
+            - option "Tickets & Experiences"
+            - option "Toys & Hobbies"
+            - option "Travel"
+            - option "Video Games & Consoles"
+            - option "Everything Else"
+        - button "Search" [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]: Search
+  - main [ref=e60]:
+    - heading "Electronics, Cars, Fashion, Collectibles & More | eBay" [level=1] [ref=e61]
+    - generic [ref=e63]:
+      - list [ref=e67]:
+        - listitem [ref=e68] [cursor=pointer]:
+          - link "Saved" [ref=e69]:
+            - /url: https://www.ebay.com/mye/myebay/saved
+        - listitem [ref=e70] [cursor=pointer]:
+          - link "Electronics" [ref=e71]:
+            - /url: https://www.ebay.com/b/Electronics/bn_7000259124
+          - 'button "Expand: Electronics" [ref=e72]'
+        - listitem [ref=e73] [cursor=pointer]:
+          - link "Motors" [ref=e74]:
+            - /url: https://www.ebay.com/b/Auto-Parts-and-Vehicles/6000/bn_1865334
+          - 'button "Expand: Motors" [ref=e75]'
+        - listitem [ref=e76] [cursor=pointer]:
+          - link "Fashion" [ref=e77]:
+            - /url: https://www.ebay.com/b/Fashion/bn_7000259856
+          - 'button "Expand: Fashion" [ref=e78]'
+        - listitem [ref=e79] [cursor=pointer]:
+          - link "Collectibles and art" [ref=e80]:
+            - /url: https://www.ebay.com/b/Collectibles-Art/bn_7000259855
+          - 'button "Expand: Collectibles and art" [ref=e81]'
+        - listitem [ref=e82] [cursor=pointer]:
+          - link "Sports" [ref=e83]:
+            - /url: https://www.ebay.com/b/Sporting-Goods/888/bn_1865031
+          - 'button "Expand: Sports" [ref=e84]'
+        - listitem [ref=e85] [cursor=pointer]:
+          - link "Health and beauty" [ref=e86]:
+            - /url: https://www.ebay.com/b/Health-Beauty/26395/bn_1865479
+          - 'button "Expand: Health and beauty" [ref=e87]'
+        - listitem [ref=e88] [cursor=pointer]:
+          - generic [ref=e89]:
+            - text: More
+            - img
+          - 'button "Expand: More" [ref=e90]'
+      - group [ref=e92]:
+        - list [ref=e95]:
+          - listitem [ref=e96]:
+            - complementary [ref=e97]:
+              - generic [ref=e98]:
+                - generic [ref=e99]:
+                  - heading "Shipping temporarily paused" [level=2] [ref=e100]
+                  - paragraph [ref=e101]: Service disruptions in the Middle East.
+                  - link "Learn more" [ref=e102] [cursor=pointer]:
+                    - /url: https://community.ebay.com/t5/Announcements/Temporarily-pausing-US-international-shipping-services-to-the/ba-p/35509895
+                - img [ref=e104]
+      - complementary "The future in your hands" [ref=e105]:
+        - heading "The future in your hands" [level=2] [ref=e106]
+        - group [ref=e107]:
+          - generic [ref=e108]:
+            - button "Previous Slide" [disabled] [ref=e109]:
+              - img
+            - list [ref=e111]:
+              - listitem [ref=e112]:
+                - link "Laptops" [ref=e113] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1648276
+                  - generic [ref=e116]: Laptops
+              - listitem [ref=e117]:
+                - link "Computer parts" [ref=e118] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1643095
+                  - generic [ref=e121]: Computer parts
+              - listitem [ref=e122]:
+                - link "Smartphones" [ref=e123] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_320094
+                  - generic [ref=e126]: Smartphones
+              - listitem [ref=e127]:
+                - link "Enterprise networking" [ref=e128] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1309143
+                  - generic [ref=e131]: Enterprise networking
+              - listitem [ref=e132]:
+                - link "Tablets and eBooks" [ref=e133] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_320042
+                  - generic [ref=e136]: Tablets and eBooks
+              - listitem [ref=e137]:
+                - link [ref=e138] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_738891
+                  - generic [ref=e141]: Storage and blank media
+              - listitem [ref=e142]:
+                - link [ref=e143] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_152392
+                  - generic [ref=e146]: Lenses and filters
+            - button "Next Slide" [ref=e147]:
+              - img
+      - complementary [ref=e148]:
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - heading "Today's Deals" [level=2] [ref=e153]
+            - generic [ref=e155]: All with free shipping
+          - group [ref=e156]:
+            - generic [ref=e157]:
+              - button "Previous Slide" [disabled] [ref=e158]:
+                - img
+              - list [ref=e160]:
+                - listitem [ref=e161]:
+                  - article [ref=e162]:
+                    - generic [ref=e163]:
+                      - button "Watchlist" [ref=e165] [cursor=pointer]:
+                        - generic [ref=e166]:
+                          - img
+                      - link [ref=e167] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/276582090868?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D1%26rkt%3D15%26itm%3D276582090868%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG70H5X4RVT6B3E3QZ4Z
+                    - link "Dyson V15 Detect Total Clean Extra | Yellow/Nickel | Refurbished ₪1,277.38 - Previous price ₪2,177.37 - opens in new window or tab" [ref=e170] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/276582090868?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D1%26rkt%3D15%26itm%3D276582090868%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG70H5X4RVT6B3E3QZ4Z
+                      - generic [ref=e171]:
+                        - generic "Dyson V15 Detect Total Clean Extra | Yellow/Nickel | Refurbished" [ref=e172]
+                        - generic [ref=e174]:
+                          - insertion [ref=e175]: ₪1,277.38
+                          - deletion [ref=e176]:
+                            - generic [ref=e177]: "- Previous price"
+                            - text: ₪2,177.37
+                      - generic [ref=e178]: "- opens in new window or tab"
+                - listitem [ref=e179]:
+                  - article [ref=e180]:
+                    - generic [ref=e181]:
+                      - button "Watchlist" [ref=e183] [cursor=pointer]:
+                        - generic [ref=e184]:
+                          - img
+                      - link [ref=e185] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/144765186296?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D2%26rkt%3D15%26itm%3D144765186296%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7A75C0KQX7MM0XAK0W
+                    - link "EcoFlow DELTA 2 Portable Power Station 1024Wh Certified Refurbished, LiFePO4 ₪1,375.39 - Previous price ₪2,609.98 - opens in new window or tab" [ref=e188] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/144765186296?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D2%26rkt%3D15%26itm%3D144765186296%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7A75C0KQX7MM0XAK0W
+                      - generic [ref=e189]:
+                        - generic "EcoFlow DELTA 2 Portable Power Station 1024Wh Certified Refurbished, LiFePO4" [ref=e190]
+                        - generic [ref=e192]:
+                          - insertion [ref=e193]: ₪1,375.39
+                          - deletion [ref=e194]:
+                            - generic [ref=e195]: "- Previous price"
+                            - text: ₪2,609.98
+                      - generic [ref=e196]: "- opens in new window or tab"
+                - listitem [ref=e197]:
+                  - article [ref=e198]:
+                    - generic [ref=e199]:
+                      - button "Watchlist" [ref=e201] [cursor=pointer]:
+                        - generic [ref=e202]:
+                          - img
+                      - link [ref=e203] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/386708545260?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D3%26rkt%3D15%26itm%3D386708545260%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7AVR97YTBKX0M7NB2S
+                    - link "eufy SoloCam S3 Solar Wireless Security Camera 360°PTZ 3K Dual-Cam Night Vision ₪326.58 - Previous price ₪580.61 - opens in new window or tab" [ref=e206] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/386708545260?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D3%26rkt%3D15%26itm%3D386708545260%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7AVR97YTBKX0M7NB2S
+                      - generic [ref=e207]:
+                        - generic "eufy SoloCam S3 Solar Wireless Security Camera 360°PTZ 3K Dual-Cam Night Vision" [ref=e208]
+                        - generic [ref=e210]:
+                          - insertion [ref=e211]: ₪326.58
+                          - deletion [ref=e212]:
+                            - generic [ref=e213]: "- Previous price"
+                            - text: ₪580.61
+                      - generic [ref=e214]: "- opens in new window or tab"
+                - listitem [ref=e215]:
+                  - article [ref=e216]:
+                    - generic [ref=e217]:
+                      - button "Watchlist" [ref=e219] [cursor=pointer]:
+                        - generic [ref=e220]:
+                          - img
+                      - link [ref=e221] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/364029899284?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D4%26rkt%3D15%26itm%3D364029899284%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7ANGT7MRRBW9VSNS29
+                    - link "Milwaukee 2953-20 FUEL 18V Li-Ion Brushless Cordless 1/4\" Hex Impact Driver 4GEN ₪322.23 - opens in new window or tab" [ref=e224] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/364029899284?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D4%26rkt%3D15%26itm%3D364029899284%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7ANGT7MRRBW9VSNS29
+                      - generic [ref=e225]:
+                        - generic "Milwaukee 2953-20 FUEL 18V Li-Ion Brushless Cordless 1/4\" Hex Impact Driver 4GEN" [ref=e226]
+                        - generic [ref=e228]: ₪322.23
+                      - generic [ref=e229]: "- opens in new window or tab"
+                - listitem [ref=e230]:
+                  - article [ref=e231]:
+                    - generic [ref=e232]:
+                      - button "Watchlist" [ref=e234] [cursor=pointer]:
+                        - generic [ref=e235]:
+                          - img
+                      - link [ref=e236] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/236443177510?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D5%26rkt%3D15%26itm%3D236443177510%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7BK1VWMDGT40BMM40W
+                    - link "Shark Stratos Cordless Vacuum, Clean Sense IQ & DuoClean PowerFins (Refurbished) ₪508.03 - Previous price ₪1,320.93 - opens in new window or tab" [ref=e239] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/236443177510?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D5%26rkt%3D15%26itm%3D236443177510%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7BK1VWMDGT40BMM40W
+                      - generic [ref=e240]:
+                        - generic "Shark Stratos Cordless Vacuum, Clean Sense IQ & DuoClean PowerFins (Refurbished)" [ref=e241]
+                        - generic [ref=e243]:
+                          - insertion [ref=e244]: ₪508.03
+                          - deletion [ref=e245]:
+                            - generic [ref=e246]: "- Previous price"
+                            - text: ₪1,320.93
+                      - generic [ref=e247]: "- opens in new window or tab"
+                - listitem [ref=e248]:
+                  - article [ref=e249]:
+                    - generic [ref=e250]:
+                      - button [ref=e252] [cursor=pointer]:
+                        - generic [ref=e253]:
+                          - img
+                      - link [ref=e254] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/176066222261?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D6%26rkt%3D15%26itm%3D176066222261%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7C3W7ZV7YX4GYKF3RG
+                    - link [ref=e257] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/176066222261?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D6%26rkt%3D15%26itm%3D176066222261%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7C3W7ZV7YX4GYKF3RG
+                      - generic [ref=e258]:
+                        - generic [ref=e259]: Milwaukee 49-16-2719R M18 FUEL 18VQUIK-LOK Hedge Trimmer Attachment - Recon
+                        - generic [ref=e260]:
+                          - insertion [ref=e261]: See Price
+                          - deletion [ref=e262]:
+                            - generic [ref=e263]: "- Previous price"
+                            - text: ₪346.47
+                      - generic [ref=e264]: "- opens in new window or tab"
+                - listitem [ref=e265]:
+                  - article [ref=e266]:
+                    - generic [ref=e267]:
+                      - button [ref=e269] [cursor=pointer]:
+                        - generic [ref=e270]:
+                          - img
+                      - link [ref=e271] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/136925130335?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D7%26rkt%3D15%26itm%3D136925130335%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7DFEBMQAS578CR861R
+                    - link [ref=e274] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/136925130335?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D7%26rkt%3D15%26itm%3D136925130335%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7DFEBMQAS578CR861R
+                      - generic [ref=e275]:
+                        - generic [ref=e276]: Crocs Adult Ghostbusters Classic Clogs
+                        - generic [ref=e278]:
+                          - insertion [ref=e279]: ₪116.10
+                          - deletion [ref=e280]:
+                            - generic [ref=e281]: "- Previous price"
+                            - text: ₪261.26
+                      - generic [ref=e282]: "- opens in new window or tab"
+                - listitem [ref=e283]:
+                  - article [ref=e284]:
+                    - generic [ref=e285]:
+                      - button [ref=e287] [cursor=pointer]:
+                        - generic [ref=e288]:
+                          - img
+                      - link [ref=e289] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/286916082198?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D8%26rkt%3D15%26itm%3D286916082198%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7DQ1W31X017RWX0CG9
+                    - link [ref=e292] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/286916082198?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D8%26rkt%3D15%26itm%3D286916082198%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7DQ1W31X017RWX0CG9
+                      - generic [ref=e293]:
+                        - generic [ref=e294]: iPhone 15 128GB 256GB 512GB Verizon AT&T T-Mobile Unlocked (Very Good)
+                        - generic [ref=e296]: ₪1,382.62
+                      - generic [ref=e297]: "- opens in new window or tab"
+                - listitem [ref=e298]:
+                  - article [ref=e299]:
+                    - generic [ref=e300]:
+                      - button [ref=e302] [cursor=pointer]:
+                        - generic [ref=e303]:
+                          - img
+                      - link [ref=e304] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/236709435295?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D9%26rkt%3D15%26itm%3D236709435295%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7E7VPG4V58737ME50N
+                    - link [ref=e307] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/236709435295?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D9%26rkt%3D15%26itm%3D236709435295%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7E7VPG4V58737ME50N
+                      - generic [ref=e308]:
+                        - generic [ref=e309]: LEGO 71052 Minifigures Series 29 - Complete Set of 12 (IN STOCK)
+                        - generic [ref=e311]: ₪194.34
+                      - generic [ref=e312]: "- opens in new window or tab"
+                - listitem [ref=e313]:
+                  - article [ref=e314]:
+                    - generic [ref=e315]:
+                      - button [ref=e317] [cursor=pointer]:
+                        - generic [ref=e318]:
+                          - img
+                      - link [ref=e319] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/354326242971?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D10%26rkt%3D15%26itm%3D354326242971%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7EV619K83X49DV0AB2
+                    - link [ref=e322] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/354326242971?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D10%26rkt%3D15%26itm%3D354326242971%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7EV619K83X49DV0AB2
+                      - generic [ref=e323]:
+                        - generic [ref=e324]: The North Face Men's T-Shirt Short Sleeve Half Dome Small Logo Regular Fit Tee
+                        - generic [ref=e326]: ₪70.66
+                      - generic [ref=e327]: "- opens in new window or tab"
+                - listitem [ref=e328]:
+                  - article [ref=e329]:
+                    - generic [ref=e330]:
+                      - button [ref=e332] [cursor=pointer]:
+                        - generic [ref=e333]:
+                          - img
+                      - link [ref=e334] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/296499747639?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D11%26rkt%3D15%26itm%3D296499747639%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7EGMXX39WCRD763Z5T
+                    - link [ref=e337] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/296499747639?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D11%26rkt%3D15%26itm%3D296499747639%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7EGMXX39WCRD763Z5T
+                      - generic [ref=e338]:
+                        - generic [ref=e339]: Yara Moi by Lattafa perfume for women EDP 3.3 / 3.4 oz New in Box
+                        - generic [ref=e341]:
+                          - insertion [ref=e342]: ₪71.94
+                          - deletion [ref=e343]:
+                            - generic [ref=e344]: "- Previous price"
+                            - text: ₪191.58
+                      - generic [ref=e345]: "- opens in new window or tab"
+                - listitem [ref=e346]:
+                  - article [ref=e347]:
+                    - generic [ref=e348]:
+                      - button [ref=e350] [cursor=pointer]:
+                        - generic [ref=e351]:
+                          - img
+                      - link [ref=e352] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/376911278554?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D12%26rkt%3D15%26itm%3D376911278554%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FRQ5TMZQG4RKH5KKN
+                    - link [ref=e355] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/376911278554?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D12%26rkt%3D15%26itm%3D376911278554%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FRQ5TMZQG4RKH5KKN
+                      - generic [ref=e356]:
+                        - generic [ref=e357]: NAVEE Birdie 3X Auto Follow Electric Golf Push Cart Remote Foldable-Open Box
+                        - generic [ref=e359]:
+                          - insertion [ref=e360]: ₪3,771.23
+                          - deletion [ref=e361]:
+                            - generic [ref=e362]: "- Previous price"
+                            - text: ₪4,935.41
+                      - generic [ref=e363]: "- opens in new window or tab"
+                - listitem [ref=e364]:
+                  - article [ref=e365]:
+                    - generic [ref=e366]:
+                      - button [ref=e368] [cursor=pointer]:
+                        - generic [ref=e369]:
+                          - img
+                      - link [ref=e370] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/286279403053?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D13%26rkt%3D15%26itm%3D286279403053%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FEZ504YK3T9PYPZHR
+                    - link [ref=e373] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/286279403053?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D13%26rkt%3D15%26itm%3D286279403053%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FEZ504YK3T9PYPZHR
+                      - generic [ref=e374]:
+                        - generic [ref=e375]: Makita 18V X2 LXT 7-1/4" Circular Saw Kit (5 Ah) XSH06PT-R Certified Refurbished
+                        - generic [ref=e377]:
+                          - insertion [ref=e378]: ₪740.29
+                          - deletion [ref=e379]:
+                            - generic [ref=e380]: "- Previous price"
+                            - text: ₪841.90
+                      - generic [ref=e381]: "- opens in new window or tab"
+                - listitem [ref=e382]:
+                  - article [ref=e383]:
+                    - generic [ref=e384]:
+                      - button [ref=e386] [cursor=pointer]:
+                        - generic [ref=e387]:
+                          - img
+                      - link [ref=e388] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/306788661226?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D14%26rkt%3D15%26itm%3D306788661226%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FVE3NWGGG579JZAK9
+                    - link [ref=e391] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/306788661226?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D14%26rkt%3D15%26itm%3D306788661226%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7FVE3NWGGG579JZAK9
+                      - generic [ref=e392]:
+                        - generic [ref=e393]: DJI Osmo Pocket 3 Creator Combo (Certified Refurbished)
+                        - generic [ref=e395]: ₪1,709.98
+                      - generic [ref=e396]: "- opens in new window or tab"
+                - listitem [ref=e397]:
+                  - article [ref=e398]:
+                    - generic [ref=e399]:
+                      - button [ref=e401] [cursor=pointer]:
+                        - generic [ref=e402]:
+                          - img
+                      - link [ref=e403] [cursor=pointer]:
+                        - /url: https://www.ebay.com/itm/377067503390?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D15%26rkt%3D15%26itm%3D377067503390%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7GQXFCHFYC058AD60B
+                    - link [ref=e406] [cursor=pointer]:
+                      - /url: https://www.ebay.com/itm/377067503390?_trkparms=amclksrc%3DITM%26aid%3D777008%26algo%3DPERSONAL.TOPIC%26ao%3D1%26asc%3D20250416182756%26meid%3D4b6c4a9d126541c0a4302527332a6d35%26pid%3D102690%26rk%3D15%26rkt%3D15%26itm%3D377067503390%26pmt%3D0%26noa%3D1%26pg%3D4375194%26algv%3DFeaturedDealsV2%26tu%3D01KS7AMG7GQXFCHFYC058AD60B
+                      - generic [ref=e407]:
+                        - generic [ref=e408]: Reconditioned OM SYSTEM Tough TG-7 Waterproof Digital Camera Body- Red Edition
+                        - generic [ref=e410]:
+                          - insertion [ref=e411]: ₪1,021.90
+                          - deletion [ref=e412]:
+                            - generic [ref=e413]: "- Previous price"
+                            - text: ₪1,277.38
+                      - generic [ref=e414]: "- opens in new window or tab"
+              - button "Next Slide" [ref=e415]:
+                - img
+      - complementary "Trending on eBay" [ref=e416]:
+        - heading "Trending on eBay" [level=2] [ref=e417]
+        - group [ref=e418]:
+          - generic [ref=e419]:
+            - button "Previous Slide" [disabled] [ref=e420]:
+              - img
+            - list [ref=e422]:
+              - listitem [ref=e423]:
+                - link "Tech" [ref=e424] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_7000259124
+                  - generic [ref=e427]: Tech
+              - listitem [ref=e428]:
+                - link "Motors" [ref=e429] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_569479
+                  - generic [ref=e432]: Motors
+              - listitem [ref=e433]:
+                - link "Luxury" [ref=e434] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_7109710914
+                  - generic [ref=e437]: Luxury
+              - listitem [ref=e438]:
+                - link "Collectibles and art" [ref=e439] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_7000259855
+                  - generic [ref=e442]: Collectibles and art
+              - listitem [ref=e443]:
+                - link "Home and garden" [ref=e444] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1853126
+                  - generic [ref=e447]: Home and garden
+              - listitem [ref=e448]:
+                - link [ref=e449] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1852210
+                  - generic [ref=e452]: Trading cards
+              - listitem [ref=e453]:
+                - link [ref=e454] [cursor=pointer]:
+                  - /url: https://www.ebay.com/b/bn_1865479
+                  - generic [ref=e457]: Health and beauty
+            - button "Next Slide" [ref=e458]:
+              - img
+  - contentinfo [ref=e463]:
+    - list [ref=e464]:
+      - listitem [ref=e465]:
+        - link "About eBay" [ref=e466] [cursor=pointer]:
+          - /url: https://www.ebayinc.com
+      - listitem [ref=e467]:
+        - link "Announcements" [ref=e468] [cursor=pointer]:
+          - /url: https://community.ebay.com/t5/Announcements/bg-p/Announcements
+      - listitem [ref=e469]:
+        - link "Community" [ref=e470] [cursor=pointer]:
+          - /url: https://community.ebay.com
+      - listitem [ref=e471]:
+        - link "Security Center" [ref=e472] [cursor=pointer]:
+          - /url: https://pages.ebay.com/securitycenter/index.html
+      - listitem [ref=e473]:
+        - link "Seller Center" [ref=e474] [cursor=pointer]:
+          - /url: https://www.ebay.com/sellercenter
+      - listitem [ref=e475]:
+        - link "Policies" [ref=e476] [cursor=pointer]:
+          - /url: https://www.ebay.com/help/policies/default/ebays-rules-policies?id=4205
+      - listitem [ref=e477]:
+        - link "Affiliates" [ref=e478] [cursor=pointer]:
+          - /url: https://partnernetwork.ebay.com/
+      - listitem [ref=e479]:
+        - link "Product Safety Tips" [ref=e480] [cursor=pointer]:
+          - /url: https://pages.ebay.com/safetytips
+      - listitem [ref=e481]:
+        - link "Help & Contact" [ref=e482] [cursor=pointer]:
+          - /url: https://www.ebay.com/help/home
+      - listitem [ref=e483]:
+        - link "Site Map" [ref=e484] [cursor=pointer]:
+          - /url: https://pages.ebay.com/sitemap.html
+    - generic [ref=e485]:
+      - text: Copyright © 1995-2026 eBay Inc. All Rights Reserved.
+      - link "Accessibility" [ref=e486] [cursor=pointer]:
+        - /url: https://www.ebayinc.com/accessibility/
+      - text: ","
+      - link "User Agreement" [ref=e487] [cursor=pointer]:
+        - /url: https://www.ebay.com/help/policies/member-behaviour-policies/user-agreement?id=4259
+      - text: ","
+      - link "Privacy" [ref=e488] [cursor=pointer]:
+        - /url: https://www.ebay.com/help/policies/member-behaviour-policies/user-privacy-notice-privacy-policy?id=4260
+      - text: ","
+      - link "Consumer Health Data" [ref=e489] [cursor=pointer]:
+        - /url: https://www.ebayinc.com/company/privacy-center/privacy-notice/consumer-health-data-privacy-policy/
+      - text: ","
+      - link "Payments Terms of Use" [ref=e490] [cursor=pointer]:
+        - /url: https://pages.ebay.com/payment/2.0/terms.html
+      - text: ","
+      - link "Cookies" [ref=e491] [cursor=pointer]:
+        - /url: https://www.ebay.com/help/policies/member-behaviour-policies/ebay-cookie-notice?id=4267
+      - text: ","
+      - link "CA Privacy Notice" [ref=e492] [cursor=pointer]:
+        - /url: https://www.ebayinc.com/company/privacy-center/privacy-notice/state-privacy-disclosures/#california
+      - text: ","
+      - link "Your Privacy Choices" [ref=e493] [cursor=pointer]:
+        - /url: https://www.ebay.com/adchoice/ccpa
+      - text: and
+      - link "AdChoice" [ref=e494] [cursor=pointer]:
+        - /url: https://www.ebay.com/adchoice
+        - text: AdChoice
+        - img
+  - paragraph [ref=e496]
