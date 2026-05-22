@@ -1,16 +1,20 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
+from pages.inventory_page import InventoryPage
+import config
 
-def test_ebay_homepage_navigation(page: Page):
-    # חזרה לדפדפן הסטנדרטי והנקי של פליירייט
-    page.goto("https://www.ebay.com")
-    
-    search_box = page.locator("#gh-ac")
-    expect(search_box).to_be_visible(timeout=7000)
-    search_box.fill("Shoes")
-    
-    search_button = page.locator("#gh-search-btn")
-    search_button.click()
-    
-    # הבדיקה עם הסלקטור המדויק והנכון שלך
-    first_real_shoe = page.locator("ul.srp-results .s-card.s-card--vertical").first
-    expect(first_real_shoe).to_be_visible(timeout=10000)
+def test_search_and_filter_prices(page: Page):
+
+    inventory_page = InventoryPage(page)
+    inventory_page.navigate_to_ebay()
+    target_price = 50.0
+    limit_count = 5
+    print(f"\n[Test] Starting search for 'shoes' under ${target_price}...")
+    product_urls = inventory_page.search_items_by_name_under_price(
+        query=config.SEARCH_QUERY,
+        max_price=config.MAX_PRICE,
+        limit=config.ITEMS_LIMIT,
+    )
+
+    assert isinstance(product_urls, list), "Expected product_urls to be a list"
+    assert len(product_urls) > 0, "Expected at least one product URL matching the price filter"
+    assert len(product_urls) <= limit_count, f"Expected up to {limit_count} URLs, but got {len(product_urls)}"
