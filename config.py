@@ -16,6 +16,8 @@ DEFAULT_ITEMS_LIMIT = 5
 
 
 BASE_URL = os.getenv("EBAY_URL", "https://www.ebay.com")
+EBAY_USERNAME = os.getenv("EBAY_USERNAME", "default_user")
+EBAY_PASSWORD = os.getenv("EBAY_PASSWORD", "default_password")
 EBAY_USER = os.getenv("EBAY_USERNAME")
 EBAY_PASS = os.getenv("EBAY_PASSWORD")
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
