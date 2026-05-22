@@ -1,7 +1,9 @@
 from playwright.sync_api import Page
 from pages.inventory_page import InventoryPage
 import config
+import pytest
 
+@pytest.mark.skipif(config.IS_CI, reason="Skipping UI test in CI due to Captcha restrictions")
 def test_search_and_filter_prices(page: Page):
 
     inventory_page = InventoryPage(page)
