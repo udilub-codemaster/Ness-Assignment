@@ -1,7 +1,13 @@
 import config
-import re
+from typing import Optional
+
+from playwright.sync_api import Locator, Page
+
+from flows.add_items_to_cart_flow import AddItemsToCartFlow
 from pages.base_page import BasePage
-from playwright.sync_api import Page, Locator
+from utils.listing_helpers import format_max_price_for_filter, is_cartable_listing_text
+from utils.price_parser import parse_price_from_listing_card
+
 
 class InventoryPage(BasePage):
     def __init__(self, page: Page):
@@ -12,51 +18,69 @@ class InventoryPage(BasePage):
         self._product_link = "a.s-card__link, a[href*='/itm/']"
         self._product_price = ".s-card__price, .s-item__price"
         self._next_page_button = "a.pagination__next"
-        self._max_price_filter = "input[aria-label*='Maximum Value'], input[placeholder='max']"
+        self._max_price_filter = (
+            "input[aria-label*='Maximum Value'], input[placeholder='max']"
+        )
         self._submit_price_button = "button[aria-label='Submit price range']"
 
-    def navigate_to_ebay(self):
+    def navigate_to_ebay(self) -> None:
         self.navigate(config.BASE_URL)
 
-    def _wait_for_page_ready(self):
-        self.page.wait_for_load_state(
-            config.PAGE_LOADED_INDICATOR,
-            timeout=config.DEFAULT_TIMEOUT,
-        )
-
-    def _execute_initial_search(self, query: str):
+    def search_for_query(self, query: str) -> None:
         search_input = self.page.locator(self._search_box)
         search_input.wait_for(state="visible", timeout=config.DEFAULT_TIMEOUT)
         search_input.fill(query)
         self.click_element(self._search_button)
-        self._wait_for_page_ready()
-        print(f"[Debug] Executed initial search for: {query}")
+        self.wait_for_page_loaded()
+        self._log(f"[InventoryPage] Search executed for: {query}")
 
-    def _apply_max_price_filter(self, max_price: float):
+    def apply_price_ceiling_filter(self, max_price: float) -> None:
         max_price_input = self.page.locator(self._max_price_filter)
         submit_btn = self.page.locator(self._submit_price_button)
         try:
             max_price_input.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
-            max_price_input.fill(str(int(max_price) if max_price == int(max_price) else max_price))
-            max_price_input.blur()
-            print(f"[Debug] Filled max price: {max_price}")
-            submit_btn.wait_for(state="enabled", timeout=config.SHORT_TIMEOUT)
-            submit_btn.click(timeout=config.SHORT_TIMEOUT)
-            print("[Debug] Clicked Submit price range button.")
-            self._wait_for_page_ready()
-            print("[Debug] Successfully applied max price filter via UI.")
-        except Exception as e:
-            print(f"[Warning] Could not apply UI max price filter (Error: {e}), falling back to code-level filtering.")
+            max_price_input.fill(format_max_price_for_filter(max_price))
+            self._log(f"[InventoryPage] Filled max price: {max_price}")
+            max_price_input.press("Enter")
+            submit_btn.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
+            if submit_btn.is_enabled():
+                submit_btn.click(timeout=config.SHORT_TIMEOUT)
+                self._log("[InventoryPage] Clicked Submit price range button.")
+            self.wait_for_page_loaded()
+            self._log("[InventoryPage] Applied max price filter via UI.")
+        except Exception as exc:
+            self._log(
+                f"[Warning] Could not apply UI max price filter ({exc}); "
+                "using code-level filtering only."
+            )
 
-    def _extract_price(self, card_locator: Locator) -> float:
+    def apply_buy_it_now_filter(self) -> None:
         try:
-            price_text = card_locator.locator(self._product_price).first.inner_text()
-            cleaned_price = float(re.sub(r"[^\d.]", "", price_text.split("to")[0]))
-            return cleaned_price
+            bin_link = self.page.locator("a[href*='LH_BIN=1']").first
+            bin_link.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
+            bin_link.click()
+            self.wait_for_page_loaded()
+            self._log("[InventoryPage] Applied Buy It Now filter via UI.")
+            return
+        except Exception:
+            pass
+        url = self.page.url
+        if "LH_BIN=1" not in url:
+            separator = "&" if "?" in url else "?"
+            self.page.goto(f"{url}{separator}LH_BIN=1")
+            self.wait_for_page_loaded()
+            self._log("[InventoryPage] Applied Buy It Now filter via URL (LH_BIN=1).")
+
+    def _parse_card_price(self, card: Locator) -> float:
+        try:
+            price_text = card.locator(self._product_price).first.inner_text()
+            return parse_price_from_listing_card(price_text)
         except Exception:
             return float("inf")
 
-    def _get_valid_urls_from_current_page(self, max_price: float, limit: int, current_urls: list) -> list:
+    def collect_product_urls_on_page(
+        self, max_price: float, limit: int, current_urls: list
+    ) -> list:
         self.page.locator(self._product_container).first.wait_for(
             state="visible", timeout=config.DEFAULT_TIMEOUT
         )
@@ -64,7 +88,13 @@ class InventoryPage(BasePage):
         for card in cards:
             if len(current_urls) >= limit:
                 break
-            price = self._extract_price(card)
+            try:
+                card_text = card.inner_text()
+            except Exception:
+                card_text = ""
+            if not is_cartable_listing_text(card_text):
+                continue
+            price = self._parse_card_price(card)
             if price <= max_price:
                 link_element = card.locator(self._product_link).first
                 url = link_element.get_attribute("href")
@@ -72,27 +102,55 @@ class InventoryPage(BasePage):
                     current_urls.append(url)
         return current_urls
 
-    def _go_to_next_page(self) -> bool:
+    def go_to_next_results_page(self) -> bool:
         next_btn = self.page.locator(self._next_page_button)
         if next_btn.is_visible() and next_btn.is_enabled():
             next_btn.click()
-            self._wait_for_page_ready()
+            self.wait_for_page_loaded()
             return True
         return False
 
-    def search_items_by_name_under_price(self, query: str, max_price: float, limit: int = 5) -> list:
-        self._execute_initial_search(query)
-        self._apply_max_price_filter(max_price)
-        valid_urls = []
+    def search_items_by_name_under_price(
+        self,
+        query: str,
+        max_price: float,
+        limit: int = 5,
+        pool_size: Optional[int] = None,
+    ) -> list:
+        target_pool = pool_size or max(limit * 3, limit)
+        self.search_for_query(query)
+        self.apply_price_ceiling_filter(max_price)
+        self.apply_buy_it_now_filter()
+        valid_urls: list[str] = []
         pages_scanned = 0
-        while len(valid_urls) < limit and pages_scanned < config.MAX_PAGINATION_PAGES:
-            valid_urls = self._get_valid_urls_from_current_page(max_price, limit, valid_urls)
+        while (
+            len(valid_urls) < target_pool
+            and pages_scanned < config.MAX_PAGINATION_PAGES
+        ):
+            valid_urls = self.collect_product_urls_on_page(
+                max_price, target_pool, valid_urls
+            )
             pages_scanned += 1
-            if len(valid_urls) >= limit:
+            if len(valid_urls) >= target_pool:
                 break
-            if not self._go_to_next_page():
+            if not self.go_to_next_results_page():
                 break
-        print(f"\n[InventoryPage] Found {len(valid_urls)} product URLs matching criteria:")
-        for i, url in enumerate(valid_urls, 1):
-            print(f"  [{i}] {url}")
+        self._log(
+            f"\n[InventoryPage] Found {len(valid_urls)} product URLs matching criteria:"
+        )
+        for index, url in enumerate(valid_urls, 1):
+            self._log(f"  [{index}] {url}")
         return valid_urls
+
+    def add_items_to_cart(
+        self,
+        product_urls: list,
+        max_price: float,
+        target_count: Optional[int] = None,
+    ) -> list:
+        """Delegates multi-tab add workflow; keeps stable API for tests."""
+        return AddItemsToCartFlow(
+            self.page.context,
+            max_price=max_price,
+            target_count=target_count,
+        ).run(product_urls)
