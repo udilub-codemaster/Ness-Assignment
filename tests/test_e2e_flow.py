@@ -1,6 +1,7 @@
 from playwright.sync_api import Page
 from pages.inventory_page import InventoryPage
 import config
+import pytest
 
 def test_search_and_filter_prices(page: Page):
 
