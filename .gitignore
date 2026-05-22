@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Pytest & coverage
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Allure
+allure-results/
+allure-report/
+
+# Logs & test artifacts
+logs/
+*.log
+screenshots/
+
+# MCP / local browser tooling
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE (optional)
+.idea/
+.vscode/
