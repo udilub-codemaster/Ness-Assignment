@@ -10,6 +10,7 @@ from utils.variant_helpers import label_needs_selection
 
 
 class ProductPage(BasePage):
+
     def __init__(self, page: Page):
         super().__init__(page)
         self._product_title = "h1.x-item-title__mainTitle"
@@ -54,11 +55,7 @@ class ProductPage(BasePage):
 
     def _click_add_to_cart_button(self) -> bool:
         has_variants = self.variants.has_controls()
-
         pending = self.get_pending_variants()
-        js_pending = self.variants.get_pending_variants_via_js()
-        if js_pending:
-            pending = list(dict.fromkeys(pending + js_pending))
 
         if has_variants and pending:
             self._log(
@@ -93,7 +90,16 @@ class ProductPage(BasePage):
             else:
                 self._log("[Warning] Add to cart button not found on this listing.")
             return False
-        cart_btn.click()
+
+        if has_variants:
+            self.variants.dismiss_variant_overlay()
+
+        cart_btn.scroll_into_view_if_needed()
+        try:
+            cart_btn.click(timeout=config.DEFAULT_TIMEOUT)
+        except Exception:
+            self._log("[Debug] Add to cart blocked — retrying with force click.")
+            cart_btn.click(force=True, timeout=config.DEFAULT_TIMEOUT)
         self.page.wait_for_timeout(800)
 
         if self.variants.has_variant_selection_error():
