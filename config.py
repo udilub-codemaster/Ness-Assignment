@@ -19,6 +19,7 @@ DEFAULT_ITEMS_LIMIT = 5
 
 
 BASE_URL = os.getenv("EBAY_URL", "https://www.ebay.com")
+SIGN_IN_URL = os.getenv("EBAY_SIGN_IN_URL", "https://signin.ebay.com/signin/")
 EBAY_USERNAME = os.getenv("EBAY_USERNAME", "default_user")
 EBAY_PASSWORD = os.getenv("EBAY_PASSWORD", "default_password")
 EBAY_USER = os.getenv("EBAY_USERNAME")
