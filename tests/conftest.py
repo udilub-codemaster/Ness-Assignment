@@ -1,5 +1,20 @@
 import os
 import pytest
+from playwright.sync_api import Page
+from pages.cart_page import CartPage
+from pages.inventory_page import InventoryPage
+
+
+@pytest.fixture
+def inventory_page(page: Page) -> InventoryPage:
+    inventory = InventoryPage(page)
+    inventory.navigate_to_ebay()
+    return inventory
+
+
+@pytest.fixture
+def cart_page(page: Page) -> CartPage:
+    return CartPage(page)
 
 
 def pytest_collection_modifyitems(config, items):

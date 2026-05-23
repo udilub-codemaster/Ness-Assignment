@@ -1,4 +1,3 @@
-import os
 from typing import Optional
 
 import config
@@ -6,6 +5,7 @@ from playwright.sync_api import BrowserContext
 
 from pages.base_page import BasePage
 from pages.product_page import ProductPage
+from utils.screenshot_helpers import save_page_screenshot
 
 
 class AddItemsToCartFlow:
@@ -23,7 +23,6 @@ class AddItemsToCartFlow:
 
     def run(self, product_urls: list[str]) -> list[dict]:
         verified_products: list[dict] = []
-        os.makedirs("logs/screenshots", exist_ok=True)
         url_queue = list(product_urls)
         attempt = 0
 
@@ -57,7 +56,7 @@ class AddItemsToCartFlow:
                 screenshot_path = (
                     f"logs/screenshots/item_{len(verified_products) + 1}_added.png"
                 )
-                new_tab.screenshot(path=screenshot_path)
+                save_page_screenshot(new_tab, screenshot_path)
                 verified_products.append({"title": title, "price": price, "url": url})
             except Exception as exc:
                 BasePage._log(f"[Warning] Skipped — error: {exc}")
