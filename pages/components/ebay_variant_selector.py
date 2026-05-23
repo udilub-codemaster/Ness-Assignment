@@ -1,7 +1,9 @@
 import random
 import re
+
 import config
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Locator, Page
+
 from pages.base_page import BasePage
 from utils.variant_helpers import (
     is_valid_variant_option,
@@ -12,6 +14,7 @@ from utils.variant_helpers import (
 
 
 class EbayVariantSelector(BasePage):
+
     def __init__(self, page: Page):
         super().__init__(page)
         self._legacy_variation_dropdowns = (
@@ -24,11 +27,15 @@ class EbayVariantSelector(BasePage):
             "div.vim.x-msku .listbox-button button.listbox-button__control, "
             "div.x-msku-evo .listbox-button button.listbox-button__control"
         )
+        self._variant_hint_selectors = (
+            "[data-testid='x-msku'], .x-msku, .x-sku, #msku-variation"
+        )
         self._variant_error_text = re.compile(
             r"please select|select a|select an|mandatory|before you can|"
             r"choose a|out of stock.*select",
             re.IGNORECASE,
         )
+        self._select_hint_text = re.compile(r":\s*select\b", re.IGNORECASE)
         self._variant_controls_cached: bool | None = None
 
     def _selection_applied(self, button: Locator) -> bool:
@@ -63,19 +70,9 @@ class EbayVariantSelector(BasePage):
     def _variant_hints_present(self) -> bool:
         if self.page.locator(self._sku_section).count() > 0:
             return True
-        return bool(
-            self.page.evaluate(
-                """() => {
-                    if (document.querySelector(
-                        '[data-testid="x-msku"], .x-msku, .x-sku, #msku-variation'
-                    )) {
-                        return true;
-                    }
-                    const text = (document.body?.innerText || '').slice(0, 8000);
-                    return /:\\s*select\\b/i.test(text);
-                }"""
-            )
-        )
+        if self.page.locator(self._variant_hint_selectors).count() > 0:
+            return True
+        return self.page.get_by_text(self._select_hint_text).count() > 0
 
     def _wait_for_variant_area(self) -> None:
         if self._count_variant_controls_now() > 0:
@@ -109,9 +106,6 @@ class EbayVariantSelector(BasePage):
         self._variant_controls_cached = has_controls
         return has_controls
 
-    def _has_variant_controls(self) -> bool:
-        return self._probe_variant_controls(use_cache=True)
-
     def _is_feedback_listbox(self, button: Locator) -> bool:
         container = button.locator(
             "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
@@ -136,32 +130,6 @@ class EbayVariantSelector(BasePage):
     def count_variant_listboxes(self) -> int:
         return len(self.list_variation_buttons())
 
-    def get_pending_variants_via_js(self) -> list[str]:
-        return self.page.evaluate(
-            """() => {
-                const needs = (text, val) => {
-                    const t = (text || '').replace(/\\s+/g, ' ').trim();
-                    if ((val || '').toLowerCase() === 'select') return true;
-                    if (/:\\s*select\\s*$/i.test(t)) return true;
-                    if (t.toLowerCase() === 'select') return true;
-                    return false;
-                };
-                const sel =
-                    'div.vim.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.vim.x-msku .listbox-button button.listbox-button__control, '
-                    + 'div.x-msku-evo .listbox-button button.listbox-button__control';
-                return [...document.querySelectorAll(sel)]
-                    .filter((btn) => {
-                        const name = btn.closest('.listbox-button')
-                            ?.querySelector('select.listbox__native')?.getAttribute('name') || '';
-                        return !name.toLowerCase().includes('feedback');
-                    })
-                    .map((btn) => btn.textContent.trim())
-                    .filter((t) => needs(t, ''));
-            }"""
-        )
-
     def get_pending_variants(self) -> list[str]:
         pending = []
         for button in self.list_variation_buttons():
@@ -172,35 +140,16 @@ class EbayVariantSelector(BasePage):
         return pending
 
     def _get_pending_variant_targets(self) -> list[dict]:
-        return self.page.evaluate(
-            """() => {
-                const needs = (text, val) => {
-                    const t = (text || '').replace(/\\s+/g, ' ').trim();
-                    if ((val || '').toLowerCase() === 'select') return true;
-                    if (/:\\s*select\\s*$/i.test(t)) return true;
-                    if (t.toLowerCase() === 'select') return true;
-                    return false;
-                };
-                const sel =
-                    'div.vim.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.vim.x-msku .listbox-button button.listbox-button__control, '
-                    + 'div.x-msku-evo .listbox-button button.listbox-button__control';
-                return [...document.querySelectorAll(sel)]
-                    .filter((btn) => {
-                        const name = btn.closest('.listbox-button')
-                            ?.querySelector('select.listbox__native')?.getAttribute('name') || '';
-                        return !name.toLowerCase().includes('feedback');
-                    })
-                    .map((btn) => ({
-                        text: btn.textContent.trim(),
-                        value: btn.getAttribute('value') || '',
-                        controls: btn.getAttribute('aria-controls'),
-                        needs: needs(btn.textContent, btn.getAttribute('value')),
-                    }))
-                    .filter((b) => b.needs && b.controls);
-            }"""
-        )
+        pending = []
+        for button in self.list_variation_buttons():
+            text = (button.text_content() or "").strip()
+            value = (button.get_attribute("value") or "").strip()
+            controls = button.get_attribute("aria-controls") or ""
+            if label_needs_selection(text, value) and controls:
+                pending.append(
+                    {"text": text, "value": value, "controls": controls}
+                )
+        return pending
 
     def _get_listbox_panel_for_button(self, button: Locator) -> Locator | None:
         controls_id = button.get_attribute("aria-controls")
@@ -210,21 +159,34 @@ class EbayVariantSelector(BasePage):
         return panel if panel.count() > 0 else None
 
     def _listbox_is_open(self, button: Locator, panel: Locator | None) -> bool:
-        if button.get_attribute("aria-expanded") == "true":
+        # x-msku-evo keeps option nodes visible when collapsed; aria-expanded is reliable.
+        return button.get_attribute("aria-expanded") == "true"
+
+    def _native_selection_applied(self, button: Locator, native: Locator) -> bool:
+        if self._selection_applied(button):
             return True
-        if panel is None:
+        selected = native.locator("option:checked")
+        if selected.count() == 0:
             return False
+        text = normalize_option_text(selected.first.text_content() or "")
+        return is_valid_variant_option(text)
+
+    def dismiss_variant_overlay(self) -> None:
+        """Collapse expanded listboxes and click away from the SKU block."""
+        self.page.keyboard.press("Escape")
+        expanded = self.page.locator(
+            f"{self._sku_section} button.listbox-button__control[aria-expanded='true']"
+        )
+        for i in range(expanded.count()):
+            try:
+                expanded.nth(i).click(timeout=1500)
+            except Exception:
+                pass
         try:
-            if panel.is_visible():
-                return True
+            self.page.locator("h1.x-item-title__mainTitle").click(timeout=1500)
         except Exception:
             pass
-        return (
-            panel.locator(
-                "[role='option']:visible, .listbox__option:visible"
-            ).count()
-            > 0
-        )
+        self.page.wait_for_timeout(200)
 
     def _open_listbox(self, button: Locator) -> bool:
         panel = self._get_listbox_panel_for_button(button)
@@ -251,18 +213,29 @@ class EbayVariantSelector(BasePage):
             f"button.listbox-button__control[aria-controls='{controls_id}']"
         )
         if button.count() == 0:
-            self._log(f"[Debug] Listbox '{label}': button not found for panel #{controls_id}")
+            self._log(
+                f"[Debug] Listbox '{label}': button not found for panel #{controls_id}"
+            )
             return False
 
         button = button.first
         single_variant = self.count_variant_listboxes() == 1
+        native = self._get_native_select(button)
 
-        if not single_variant and self._select_via_native_select(button, label):
+        if native is not None and self._select_via_native_select(button, label):
             return True
+
+        if single_variant and native is not None:
+            self._log(
+                f"[Debug] Listbox '{label}': native select failed on single-variant listing"
+            )
+            return False
 
         if not single_variant:
             self._close_open_listboxes()
             self.page.wait_for_timeout(300)
+        else:
+            self._ensure_listbox_closed(button)
 
         if not self._open_listbox(button):
             self._log(f"[Debug] Listbox '{label}': could not expand dropdown")
@@ -276,7 +249,9 @@ class EbayVariantSelector(BasePage):
 
         valid = self._collect_valid_listbox_options(panel)
         if not valid:
-            self._log(f"[Debug] Listbox '{label}': no visible options in panel #{controls_id}")
+            self._log(
+                f"[Debug] Listbox '{label}': no visible options in panel #{controls_id}"
+            )
             self._close_open_listboxes()
             return False
 
@@ -286,7 +261,10 @@ class EbayVariantSelector(BasePage):
             if self._activate_listbox_option(button, controls_id, option, choice):
                 applied = (button.text_content() or "").strip()
                 self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                self._close_open_listboxes()
+                if single_variant:
+                    self._ensure_listbox_closed(button)
+                else:
+                    self._close_open_listboxes()
                 self.page.wait_for_timeout(400)
                 return True
 
@@ -294,96 +272,7 @@ class EbayVariantSelector(BasePage):
         self._log(f"[Debug] Listbox '{label}': option click did not apply")
         return False
 
-    def _select_variant_js(self, controls_id: str, label: str) -> bool:
-        applied = self.page.evaluate(
-            """({ controlsId }) => {
-                const needs = (text, val) => {
-                    if ((val || '').toLowerCase() === 'select') return true;
-                    return /:\\s*select\\s*$/i.test((text || '').replace(/\\s+/g, ' ').trim());
-                };
-                const sel =
-                    'div.vim.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.x-sku .listbox-button button.listbox-button__control, '
-                    + 'div.vim.x-msku .listbox-button button.listbox-button__control, '
-                    + 'div.x-msku-evo .listbox-button button.listbox-button__control';
-                const btn = [...document.querySelectorAll(sel)]
-                    .find((b) => b.getAttribute('aria-controls') === controlsId);
-                if (!btn) return { ok: false, reason: 'button_not_found' };
-
-                btn.click();
-                const panel = document.getElementById(controlsId);
-                const panelOpen = () => {
-                    if (!panel) return false;
-                    if (btn.getAttribute('aria-expanded') === 'true') return true;
-                    const vis = [...panel.querySelectorAll('[role="option"], .listbox__option')]
-                        .filter((o) => o.offsetParent !== null);
-                    return vis.length > 0;
-                };
-                if (!panelOpen()) btn.click();
-                if (!panelOpen()) return { ok: false, reason: 'panel_not_open' };
-
-                if (!panel) return { ok: false, reason: 'panel_not_found' };
-
-                const opts = [...panel.querySelectorAll('[role="option"], .listbox__option')]
-                    .filter((o) => o.offsetParent !== null);
-                const valid = opts
-                    .map((o, j) => ({
-                        j,
-                        t: o.textContent.trim().replace(/selected$/i, '').trim(),
-                    }))
-                    .filter(
-                        (x) =>
-                            x.t &&
-                            !/^select/i.test(x.t) &&
-                            !/out of stock/i.test(x.t) &&
-                            !/rating/i.test(x.t)
-                    );
-                if (!valid.length) return { ok: false, reason: 'no_valid_options' };
-
-                const pick = valid[Math.floor(Math.random() * valid.length)];
-                const target = opts[pick.j];
-                target.dispatchEvent(
-                    new MouseEvent('mousedown', { bubbles: true, cancelable: true })
-                );
-                target.dispatchEvent(
-                    new MouseEvent('mouseup', { bubbles: true, cancelable: true })
-                );
-                target.click();
-
-                const native = btn
-                    .closest('.listbox-button')
-                    ?.querySelector('select.listbox__native');
-                if (native) {
-                    for (const opt of native.options) {
-                        const label = opt.textContent.trim().replace(/selected$/i, '').trim();
-                        if (label === pick.t || label.includes(pick.t)) {
-                            native.value = opt.value;
-                            native.dispatchEvent(new Event('input', { bubbles: true }));
-                            native.dispatchEvent(new Event('change', { bubbles: true }));
-                            break;
-                        }
-                    }
-                }
-
-                return {
-                    ok: !needs(btn.textContent, btn.getAttribute('value')),
-                    picked: pick.t,
-                    after: btn.textContent.trim(),
-                };
-            }""",
-            {"controlsId": controls_id},
-        )
-        if applied.get("ok"):
-            self._log(
-                f"[Debug] Listbox '{label}' -> '{applied.get('after')}' "
-                f"(JS, picked {applied.get('picked')})"
-            )
-            self._close_open_listboxes()
-            self.page.wait_for_timeout(400)
-            return True
-        return False
-
-    def _select_variants_via_js(self) -> int:
+    def _select_variants_via_playwright(self) -> int:
         selected = 0
         max_rounds = max(10, self.count_variant_listboxes() * 3)
 
@@ -392,7 +281,7 @@ class EbayVariantSelector(BasePage):
             if not pending:
                 break
 
-            pending.sort(key=lambda b: variant_sort_key(b["text"]))
+            pending.sort(key=lambda target: variant_sort_key(target["text"]))
             self._log(
                 f"[Debug] Variant round {round_num}: "
                 f"{len(pending)} unselected — {[p['text'] for p in pending]}"
@@ -403,24 +292,31 @@ class EbayVariantSelector(BasePage):
                 controls_id = target["controls"]
                 if self._select_variant_playwright(controls_id, label):
                     selected += 1
-                    continue
-                if self._select_variant_js(controls_id, label):
-                    selected += 1
 
         return selected
 
-    def _close_open_listboxes(self):
-        self.page.keyboard.press("Escape")
-        expanded = self.page.locator(
-            f"{self._sku_section} button.listbox-button__control[aria-expanded='true']"
-        )
-        for i in range(expanded.count()):
+    def _ensure_listbox_closed(self, button: Locator | None = None) -> None:
+        """Collapse any expanded listbox overlay before clicking elsewhere on the page."""
+        self.dismiss_variant_overlay()
+        if button is None:
+            return
+        for _ in range(8):
+            if button.get_attribute("aria-expanded") != "true":
+                return
+            self.page.keyboard.press("Escape")
             try:
-                expanded.nth(i).click(timeout=2000)
+                button.click(timeout=1500)
             except Exception:
                 pass
+            self.page.wait_for_timeout(150)
+        self.dismiss_variant_overlay()
 
-    def _collect_valid_listbox_options(self, listbox: Locator) -> list[tuple[Locator, str]]:
+    def _close_open_listboxes(self):
+        self.dismiss_variant_overlay()
+
+    def _collect_valid_listbox_options(
+        self, listbox: Locator
+    ) -> list[tuple[Locator, str]]:
         valid = []
         options = listbox.locator("[role='option'], .listbox__option")
         for i in range(options.count()):
@@ -435,67 +331,69 @@ class EbayVariantSelector(BasePage):
                 valid.append((option, option_text))
         return valid
 
-    def _sync_listbox_selection_js(self, controls_id: str, choice: str) -> bool:
-        return bool(
-            self.page.evaluate(
-                """({ controlsId, choiceText }) => {
-                    const norm = (t) =>
-                        (t || '')
-                            .replace(/\\s+/g, ' ')
-                            .trim()
-                            .replace(/selected$/i, '')
-                            .trim();
-                    const needs = (text, val) => {
-                        if ((val || '').toLowerCase() === 'select') return true;
-                        return /:\\s*select\\s*$/i.test(norm(text));
-                    };
-                    const btn = document.querySelector(
-                        `button.listbox-button__control[aria-controls="${controlsId}"]`
-                    );
-                    const panel = document.getElementById(controlsId);
-                    if (!btn || !panel) return false;
-
-                    if (btn.getAttribute('aria-expanded') !== 'true') {
-                        btn.click();
-                    }
-
-                    const want = norm(choiceText);
-                    const opts = [...panel.querySelectorAll('[role="option"], .listbox__option')]
-                        .filter((o) => o.offsetParent !== null);
-                    const target =
-                        opts.find((o) => norm(o.textContent) === want) ||
-                        opts.find((o) => norm(o.textContent).includes(want));
-
-                    if (!target) return false;
-
-                    target.dispatchEvent(
-                        new MouseEvent('mousedown', { bubbles: true, cancelable: true })
-                    );
-                    target.dispatchEvent(
-                        new MouseEvent('mouseup', { bubbles: true, cancelable: true })
-                    );
-                    target.click();
-
-                    const native = btn
-                        .closest('.listbox-button')
-                        ?.querySelector('select.listbox__native');
-                    if (native) {
-                        for (const opt of native.options) {
-                            const label = norm(opt.textContent);
-                            if (label === want || label.includes(want)) {
-                                native.value = opt.value;
-                                native.dispatchEvent(new Event('input', { bubbles: true }));
-                                native.dispatchEvent(new Event('change', { bubbles: true }));
-                                break;
-                            }
-                        }
-                    }
-
-                    return !needs(btn.textContent, btn.getAttribute('value'));
-                }""",
-                {"controlsId": controls_id, "choiceText": choice},
-            )
+    def _get_native_select(self, button: Locator) -> Locator | None:
+        container = button.locator(
+            "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
         )
+        native = container.locator("select.listbox__native")
+        if native.count() == 0:
+            return None
+        return native.first
+
+    def _sync_listbox_selection(
+        self, button: Locator, controls_id: str, choice: str
+    ) -> bool:
+        want = normalize_option_text(choice)
+        native = self._get_native_select(button)
+        if native is not None:
+            native_options = native.locator("option")
+            for i in range(native_options.count()):
+                option = native_options.nth(i)
+                label = normalize_option_text(option.text_content() or "")
+                if label == want or want in label:
+                    try:
+                        native.select_option(index=i, force=True)
+                    except Exception:
+                        native.select_option(index=i)
+                    break
+            self.page.wait_for_timeout(350)
+            self._ensure_listbox_closed(button)
+            return self._native_selection_applied(button, native)
+
+        panel = self.page.locator(f"#{controls_id}")
+        if panel.count() == 0:
+            return False
+
+        if button.get_attribute("aria-expanded") != "true":
+            self._open_listbox(button)
+
+        options = panel.locator("[role='option'], .listbox__option")
+        for i in range(options.count()):
+            option = options.nth(i)
+            try:
+                if not option.is_visible():
+                    continue
+            except Exception:
+                pass
+            opt_text = normalize_option_text(option.text_content() or "")
+            if opt_text != want and want not in opt_text:
+                continue
+            for target in (option, option.locator(".listbox__option").first):
+                if target.count() == 0:
+                    continue
+                try:
+                    target.click(timeout=config.DEFAULT_TIMEOUT)
+                except Exception:
+                    try:
+                        target.click(force=True, timeout=config.DEFAULT_TIMEOUT)
+                    except Exception:
+                        continue
+                break
+            break
+
+        self.page.wait_for_timeout(350)
+        self._ensure_listbox_closed(button)
+        return self._selection_applied(button)
 
     def _activate_listbox_option(
         self,
@@ -521,10 +419,10 @@ class EbayVariantSelector(BasePage):
                     continue
             self.page.wait_for_timeout(350)
             if self._selection_applied(button):
+                self._ensure_listbox_closed(button)
                 return True
 
-        if self._sync_listbox_selection_js(controls_id, choice):
-            self.page.wait_for_timeout(350)
+        if self._sync_listbox_selection(button, controls_id, choice):
             return self._selection_applied(button)
 
         return False
@@ -532,9 +430,10 @@ class EbayVariantSelector(BasePage):
     def _select_via_listbox_ui(self, button: Locator, label: str) -> bool:
         listbox = self._get_listbox_panel(button)
         controls_id = button.get_attribute("aria-controls") or ""
+        single_variant = self.count_variant_listboxes() == 1
 
-        if self.count_variant_listboxes() > 1:
-            self._close_open_listboxes()
+        self._ensure_listbox_closed(button)
+        if not single_variant:
             self.page.wait_for_timeout(300)
 
         if not self._open_listbox(button):
@@ -542,7 +441,10 @@ class EbayVariantSelector(BasePage):
 
         valid = self._collect_valid_listbox_options(listbox)
         if not valid:
-            self._log(f"[Debug] Listbox '{label}': no options in panel #{button.get_attribute('aria-controls')}.")
+            self._log(
+                f"[Debug] Listbox '{label}': no options in panel "
+                f"#{button.get_attribute('aria-controls')}."
+            )
             self._close_open_listboxes()
             return False
 
@@ -554,7 +456,10 @@ class EbayVariantSelector(BasePage):
             ):
                 applied = (button.text_content() or "").strip()
                 self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                self._close_open_listboxes()
+                if single_variant:
+                    self._ensure_listbox_closed(button)
+                else:
+                    self._close_open_listboxes()
                 return True
 
         self._close_open_listboxes()
@@ -562,11 +467,8 @@ class EbayVariantSelector(BasePage):
         return False
 
     def _select_via_native_select(self, button: Locator, label: str) -> bool:
-        container = button.locator(
-            "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
-        )
-        native = container.locator("select.listbox__native")
-        if native.count() == 0:
+        native = self._get_native_select(button)
+        if native is None:
             return False
 
         options = native.locator("option")
@@ -595,24 +497,20 @@ class EbayVariantSelector(BasePage):
             native.select_option(index=idx)
 
         for _ in range(15):
-            if self._selection_applied(button):
-                self._close_open_listboxes()
+            if self._native_selection_applied(button, native):
+                self._ensure_listbox_closed(button)
                 return True
             self.page.wait_for_timeout(200)
 
         controls_id = button.get_attribute("aria-controls") or ""
-        option_text = normalize_option_text(
-            options.nth(idx).text_content() or ""
-        )
-        if controls_id and option_text and self._sync_listbox_selection_js(
-            controls_id, option_text
+        option_text = normalize_option_text(options.nth(idx).text_content() or "")
+        if controls_id and option_text and self._sync_listbox_selection(
+            button, controls_id, option_text
         ):
-            self.page.wait_for_timeout(350)
-            if self._selection_applied(button):
-                self._close_open_listboxes()
+            if self._native_selection_applied(button, native):
                 return True
 
-        self._close_open_listboxes()
+        self._ensure_listbox_closed(button)
         return False
 
     def _select_random_listbox_option(self, button: Locator, label: str) -> bool:
@@ -621,12 +519,7 @@ class EbayVariantSelector(BasePage):
             self._log(f"[Debug] Listbox '{label}' already has a value, skipping.")
             return False
 
-        single_variant = self.count_variant_listboxes() == 1
-        strategies = (
-            (self._select_via_listbox_ui, self._select_via_native_select)
-            if single_variant
-            else (self._select_via_listbox_ui, self._select_via_native_select)
-        )
+        strategies = (self._select_via_listbox_ui, self._select_via_native_select)
 
         for attempt in range(2):
             for strategy in strategies:
@@ -642,9 +535,7 @@ class EbayVariantSelector(BasePage):
             dropdown = dropdowns.nth(i)
             options = dropdown.locator("option").all_text_contents()
             valid_options = [
-                opt.strip()
-                for opt in options
-                if is_valid_variant_option(opt)
+                opt.strip() for opt in options if is_valid_variant_option(opt)
             ]
             if not valid_options:
                 continue
@@ -670,15 +561,14 @@ class EbayVariantSelector(BasePage):
         total = self.count_variant_listboxes()
         self._log(f"[Debug] Found {total} variant listbox(es) on this listing.")
 
-        js_selected = self._select_variants_via_js()
+        pw_selected = self._select_variants_via_playwright()
         legacy_selected = self._select_random_legacy_dropdowns()
 
         pending = self.get_pending_variants()
-        js_pending = self.get_pending_variants_via_js()
-        if js_pending and not pending:
-            pending = js_pending
         if pending:
-            self._log(f"[Warning] Variants still unselected after JS: {pending}")
+            self._log(
+                f"[Warning] Variants still unselected after Playwright: {pending}"
+            )
             for button in self.list_variation_buttons():
                 label = (button.text_content() or "").strip()
                 if label_needs_selection(
@@ -689,8 +579,14 @@ class EbayVariantSelector(BasePage):
             pending = self.get_pending_variants()
             if pending:
                 self._log(f"[Warning] Variants still unselected: {pending}")
-        elif js_selected or legacy_selected:
+        elif pw_selected or legacy_selected:
             self._log(
-                f"[Debug] Variants set via JS ({js_selected}) and "
+                f"[Debug] Variants set via Playwright ({pw_selected}) and "
                 f"legacy ({legacy_selected})."
             )
+
+        if total == 1:
+            buttons = self.list_variation_buttons()
+            if buttons:
+                self._ensure_listbox_closed(buttons[0])
+        self.dismiss_variant_overlay()
