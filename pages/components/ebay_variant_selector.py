@@ -43,6 +43,16 @@ class EbayVariantSelector(BasePage):
         value = (button.get_attribute("value") or "").strip()
         return not label_needs_selection(text, value)
 
+    def _listbox_needs_selection(self, button: Locator) -> bool:
+        text = (button.text_content() or "").strip()
+        value = (button.get_attribute("value") or "").strip()
+        if not label_needs_selection(text, value):
+            return False
+        native = self._get_native_select(button)
+        if native is not None and self._native_selection_applied(button, native):
+            return False
+        return True
+
     def _get_listbox_panel(self, button: Locator) -> Locator:
         controls_id = button.get_attribute("aria-controls")
         if controls_id:
@@ -117,7 +127,6 @@ class EbayVariantSelector(BasePage):
         return "feedback" in name
 
     def list_variation_buttons(self) -> list[Locator]:
-        """All SKU/MSKU listbox pickers (eBay may use 2+ x-sku blocks and 3+ variants)."""
         buttons = self.page.locator(self._variation_listbox_buttons)
         variation_buttons = []
         for i in range(buttons.count()):
@@ -133,19 +142,19 @@ class EbayVariantSelector(BasePage):
     def get_pending_variants(self) -> list[str]:
         pending = []
         for button in self.list_variation_buttons():
-            text = (button.text_content() or "").strip()
-            value = (button.get_attribute("value") or "").strip()
-            if label_needs_selection(text, value):
-                pending.append(text)
+            if self._listbox_needs_selection(button):
+                pending.append((button.text_content() or "").strip())
         return pending
 
     def _get_pending_variant_targets(self) -> list[dict]:
         pending = []
         for button in self.list_variation_buttons():
+            if not self._listbox_needs_selection(button):
+                continue
             text = (button.text_content() or "").strip()
             value = (button.get_attribute("value") or "").strip()
             controls = button.get_attribute("aria-controls") or ""
-            if label_needs_selection(text, value) and controls:
+            if controls:
                 pending.append(
                     {"text": text, "value": value, "controls": controls}
                 )
@@ -165,28 +174,69 @@ class EbayVariantSelector(BasePage):
     def _native_selection_applied(self, button: Locator, native: Locator) -> bool:
         if self._selection_applied(button):
             return True
-        selected = native.locator("option:checked")
-        if selected.count() == 0:
+        options = native.locator("option")
+        for i in range(options.count()):
+            option = options.nth(i)
+            if option.get_attribute("selected") is not None:
+                text = normalize_option_text(option.text_content() or "")
+                if is_valid_variant_option(text):
+                    return True
+        try:
+            current_value = native.input_value()
+        except Exception:
             return False
-        text = normalize_option_text(selected.first.text_content() or "")
-        return is_valid_variant_option(text)
+        if not current_value:
+            return False
+        for i in range(options.count()):
+            option = options.nth(i)
+            if (option.get_attribute("value") or "") != current_value:
+                continue
+            text = normalize_option_text(option.text_content() or "")
+            return is_valid_variant_option(text)
+        return False
 
     def dismiss_variant_overlay(self) -> None:
-        """Collapse expanded listboxes and click away from the SKU block."""
+        """Dismiss expanded SKU overlays before clicking elsewhere (e.g. Add to cart)."""
         self.page.keyboard.press("Escape")
-        expanded = self.page.locator(
-            f"{self._sku_section} button.listbox-button__control[aria-expanded='true']"
-        )
-        for i in range(expanded.count()):
-            try:
-                expanded.nth(i).click(timeout=1500)
-            except Exception:
-                pass
         try:
             self.page.locator("h1.x-item-title__mainTitle").click(timeout=1500)
         except Exception:
             pass
         self.page.wait_for_timeout(200)
+
+    def _collapse_listbox_if_open(self, button: Locator | None = None) -> None:
+        """Close expanded listboxes only — no title click, no retry loop."""
+        expanded = self.page.locator(
+            f"{self._sku_section} button.listbox-button__control[aria-expanded='true']"
+        )
+        if expanded.count() == 0 and (
+            button is None or button.get_attribute("aria-expanded") != "true"
+        ):
+            return
+
+        self.page.keyboard.press("Escape")
+        targets: list[Locator] = []
+        if button is not None and button.get_attribute("aria-expanded") == "true":
+            targets.append(button)
+        for i in range(expanded.count()):
+            targets.append(expanded.nth(i))
+
+        seen: set[str] = set()
+        for target in targets:
+            try:
+                if target.get_attribute("aria-expanded") != "true":
+                    continue
+                key = target.get_attribute("aria-controls") or str(id(target))
+                if key in seen:
+                    continue
+                seen.add(key)
+                target.click(timeout=1500)
+            except Exception:
+                pass
+        self.page.wait_for_timeout(150)
+
+    def _close_open_listboxes(self) -> None:
+        self._collapse_listbox_if_open()
 
     def _open_listbox(self, button: Locator) -> bool:
         panel = self._get_listbox_panel_for_button(button)
@@ -219,10 +269,16 @@ class EbayVariantSelector(BasePage):
             return False
 
         button = button.first
+        if not self._listbox_needs_selection(button):
+            return True
+
         single_variant = self.count_variant_listboxes() == 1
         native = self._get_native_select(button)
 
         if native is not None and self._select_via_native_select(button, label):
+            return True
+
+        if native is not None and self._native_selection_applied(button, native):
             return True
 
         if single_variant and native is not None:
@@ -234,8 +290,6 @@ class EbayVariantSelector(BasePage):
         if not single_variant:
             self._close_open_listboxes()
             self.page.wait_for_timeout(300)
-        else:
-            self._ensure_listbox_closed(button)
 
         if not self._open_listbox(button):
             self._log(f"[Debug] Listbox '{label}': could not expand dropdown")
@@ -261,10 +315,7 @@ class EbayVariantSelector(BasePage):
             if self._activate_listbox_option(button, controls_id, option, choice):
                 applied = (button.text_content() or "").strip()
                 self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                if single_variant:
-                    self._ensure_listbox_closed(button)
-                else:
-                    self._close_open_listboxes()
+                self._collapse_listbox_if_open(button)
                 self.page.wait_for_timeout(400)
                 return True
 
@@ -290,29 +341,15 @@ class EbayVariantSelector(BasePage):
             for target in pending:
                 label = target["text"]
                 controls_id = target["controls"]
+                button = self.page.locator(
+                    f"button.listbox-button__control[aria-controls='{controls_id}']"
+                ).first
+                if not self._listbox_needs_selection(button):
+                    continue
                 if self._select_variant_playwright(controls_id, label):
                     selected += 1
 
         return selected
-
-    def _ensure_listbox_closed(self, button: Locator | None = None) -> None:
-        """Collapse any expanded listbox overlay before clicking elsewhere on the page."""
-        self.dismiss_variant_overlay()
-        if button is None:
-            return
-        for _ in range(8):
-            if button.get_attribute("aria-expanded") != "true":
-                return
-            self.page.keyboard.press("Escape")
-            try:
-                button.click(timeout=1500)
-            except Exception:
-                pass
-            self.page.wait_for_timeout(150)
-        self.dismiss_variant_overlay()
-
-    def _close_open_listboxes(self):
-        self.dismiss_variant_overlay()
 
     def _collect_valid_listbox_options(
         self, listbox: Locator
@@ -357,7 +394,6 @@ class EbayVariantSelector(BasePage):
                         native.select_option(index=i)
                     break
             self.page.wait_for_timeout(350)
-            self._ensure_listbox_closed(button)
             return self._native_selection_applied(button, native)
 
         panel = self.page.locator(f"#{controls_id}")
@@ -392,7 +428,7 @@ class EbayVariantSelector(BasePage):
             break
 
         self.page.wait_for_timeout(350)
-        self._ensure_listbox_closed(button)
+        self._collapse_listbox_if_open(button)
         return self._selection_applied(button)
 
     def _activate_listbox_option(
@@ -419,7 +455,7 @@ class EbayVariantSelector(BasePage):
                     continue
             self.page.wait_for_timeout(350)
             if self._selection_applied(button):
-                self._ensure_listbox_closed(button)
+                self._collapse_listbox_if_open(button)
                 return True
 
         if self._sync_listbox_selection(button, controls_id, choice):
@@ -428,12 +464,15 @@ class EbayVariantSelector(BasePage):
         return False
 
     def _select_via_listbox_ui(self, button: Locator, label: str) -> bool:
+        if not self._listbox_needs_selection(button):
+            return True
+
         listbox = self._get_listbox_panel(button)
         controls_id = button.get_attribute("aria-controls") or ""
         single_variant = self.count_variant_listboxes() == 1
 
-        self._ensure_listbox_closed(button)
         if not single_variant:
+            self._close_open_listboxes()
             self.page.wait_for_timeout(300)
 
         if not self._open_listbox(button):
@@ -456,10 +495,7 @@ class EbayVariantSelector(BasePage):
             ):
                 applied = (button.text_content() or "").strip()
                 self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                if single_variant:
-                    self._ensure_listbox_closed(button)
-                else:
-                    self._close_open_listboxes()
+                self._collapse_listbox_if_open(button)
                 return True
 
         self._close_open_listboxes()
@@ -470,6 +506,9 @@ class EbayVariantSelector(BasePage):
         native = self._get_native_select(button)
         if native is None:
             return False
+
+        if self._native_selection_applied(button, native):
+            return True
 
         options = native.locator("option")
         valid_indices = []
@@ -498,28 +537,17 @@ class EbayVariantSelector(BasePage):
 
         for _ in range(15):
             if self._native_selection_applied(button, native):
-                self._ensure_listbox_closed(button)
                 return True
             self.page.wait_for_timeout(200)
 
-        controls_id = button.get_attribute("aria-controls") or ""
-        option_text = normalize_option_text(options.nth(idx).text_content() or "")
-        if controls_id and option_text and self._sync_listbox_selection(
-            button, controls_id, option_text
-        ):
-            if self._native_selection_applied(button, native):
-                return True
-
-        self._ensure_listbox_closed(button)
-        return False
+        return self._native_selection_applied(button, native)
 
     def _select_random_listbox_option(self, button: Locator, label: str) -> bool:
-        value = (button.get_attribute("value") or "").strip()
-        if not label_needs_selection(label, value):
+        if not self._listbox_needs_selection(button):
             self._log(f"[Debug] Listbox '{label}' already has a value, skipping.")
             return False
 
-        strategies = (self._select_via_listbox_ui, self._select_via_native_select)
+        strategies = (self._select_via_native_select, self._select_via_listbox_ui)
 
         for attempt in range(2):
             for strategy in strategies:
@@ -566,27 +594,11 @@ class EbayVariantSelector(BasePage):
 
         pending = self.get_pending_variants()
         if pending:
-            self._log(
-                f"[Warning] Variants still unselected after Playwright: {pending}"
-            )
-            for button in self.list_variation_buttons():
-                label = (button.text_content() or "").strip()
-                if label_needs_selection(
-                    label, (button.get_attribute("value") or "").strip()
-                ):
-                    self._close_open_listboxes()
-                    self._select_random_listbox_option(button, label)
-            pending = self.get_pending_variants()
-            if pending:
-                self._log(f"[Warning] Variants still unselected: {pending}")
+            self._log(f"[Warning] Variants still unselected: {pending}")
         elif pw_selected or legacy_selected:
             self._log(
                 f"[Debug] Variants set via Playwright ({pw_selected}) and "
                 f"legacy ({legacy_selected})."
             )
 
-        if total == 1:
-            buttons = self.list_variation_buttons()
-            if buttons:
-                self._ensure_listbox_closed(buttons[0])
         self.dismiss_variant_overlay()

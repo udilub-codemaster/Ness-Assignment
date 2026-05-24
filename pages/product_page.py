@@ -6,7 +6,6 @@ from playwright.sync_api import Page
 from pages.base_page import BasePage
 from pages.components.ebay_variant_selector import EbayVariantSelector
 from utils.string_helpers import extract_float_from_string
-from utils.variant_helpers import label_needs_selection
 
 
 class ProductPage(BasePage):
@@ -62,22 +61,6 @@ class ProductPage(BasePage):
                 f"[Warning] Cannot add to cart — mandatory variants not selected: {pending}"
             )
             return False
-
-        if has_variants and self.variants.count_variant_listboxes() > 0:
-            unselected = [
-                (b.text_content() or "").strip()
-                for b in self.variants.list_variation_buttons()
-                if label_needs_selection(
-                    (b.text_content() or "").strip(),
-                    (b.get_attribute("value") or "").strip(),
-                )
-            ]
-            if unselected:
-                self._log(
-                    f"[Warning] Cannot add to cart — {len(unselected)} listbox(es) "
-                    f"still need selection: {unselected}"
-                )
-                return False
 
         cart_btn = self.page.locator(self._add_to_cart_button).first
         try:

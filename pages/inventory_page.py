@@ -148,7 +148,6 @@ class InventoryPage(BasePage):
         max_price: float,
         target_count: Optional[int] = None,
     ) -> list:
-        """Delegates multi-tab add workflow; keeps stable API for tests."""
         return AddItemsToCartFlow(
             self.page.context,
             max_price=max_price,
