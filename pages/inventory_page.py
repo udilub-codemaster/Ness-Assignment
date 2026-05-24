@@ -58,7 +58,7 @@ class InventoryPage(BasePage):
         try:
             bin_link = self.page.locator("a[href*='LH_BIN=1']").first
             bin_link.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
-            bin_link.click()
+            bin_link.click(timeout=config.DEFAULT_TIMEOUT)
             self.wait_for_page_loaded()
             self._log("[InventoryPage] Applied Buy It Now filter via UI.")
             return
@@ -67,7 +67,11 @@ class InventoryPage(BasePage):
         url = self.page.url
         if "LH_BIN=1" not in url:
             separator = "&" if "?" in url else "?"
-            self.page.goto(f"{url}{separator}LH_BIN=1")
+            self.page.goto(
+                f"{url}{separator}LH_BIN=1",
+                wait_until="load",
+                timeout=config.LONG_TIMEOUT,
+            )
             self.wait_for_page_loaded()
             self._log("[InventoryPage] Applied Buy It Now filter via URL (LH_BIN=1).")
 
@@ -105,7 +109,7 @@ class InventoryPage(BasePage):
     def go_to_next_results_page(self) -> bool:
         next_btn = self.page.locator(self._next_page_button)
         if next_btn.is_visible() and next_btn.is_enabled():
-            next_btn.click()
+            next_btn.click(timeout=config.DEFAULT_TIMEOUT)
             self.wait_for_page_loaded()
             return True
         return False
