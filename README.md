@@ -65,7 +65,7 @@ flowchart TD
     V --> V2[get_cart_total and assert budget]
 ```
 
-1. **Search & filter** — `InventoryPage` opens a single filtered search URL (`_nkw`, `LH_BIN=1`, `_udhi`), verifies params and sample results, then paginates until enough product URLs are collected.
+1. **Search & filter** — `InventoryPage` opens a single filtered search URL (`_nkw`, `LH_BIN=1`, `_udhi`), verifies params and sample results, then paginates until up to `items_limit` in-budget product URLs are collected.
 2. **Add to cart** — `AddItemsToCartFlow` opens each URL in a new tab, re-checks the price, handles variants where possible, and adds in-budget items until the target count is reached (or the URL pool is exhausted).
 3. **Verify cart** — `cart_verification_flow` navigates to the cart, reads the subtotal, saves a screenshot, and asserts the total does not exceed `max_price × items_added`.
 
@@ -97,7 +97,7 @@ flowchart TD
 
 - Only **Buy It Now** listings are targeted; pure auction listings are filtered out.
 - The test aims for `items_limit` successful add-to-cart actions, not a fixed set of URLs from search — some candidates are skipped (over budget, variants not resolved, add-to-cart failure).
-- The budget assertion checks `cart_total <= max_price × items_added`, not per-line-item prices on the cart page.
+- The budget assertion checks `cart_total <= max_price × items_added`, using the count of successfully added items (not the search URL count), since live eBay may skip some listings.
 - Variant selection is best-effort; listings with complex configurators may be skipped.
 
 ### CI and environment

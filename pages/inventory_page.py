@@ -138,21 +138,19 @@ class InventoryPage(BasePage):
         query: str,
         max_price: float,
         limit: int = 5,
-        pool_size: Optional[int] = None,
     ) -> list:
-        target_pool = pool_size or max(limit * 3, limit)
         self.search_with_filters(query, max_price)
         valid_urls: list[str] = []
         pages_scanned = 0
         while (
-            len(valid_urls) < target_pool
+            len(valid_urls) < limit
             and pages_scanned < config.MAX_PAGINATION_PAGES
         ):
             valid_urls = self.collect_product_urls_on_page(
-                max_price, target_pool, valid_urls
+                max_price, limit, valid_urls
             )
             pages_scanned += 1
-            if len(valid_urls) >= target_pool:
+            if len(valid_urls) >= limit:
                 break
             if not self.go_to_next_results_page(max_price):
                 break

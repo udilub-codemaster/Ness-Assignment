@@ -17,5 +17,5 @@ def test_search_add_to_cart_and_assert_budget(
         config.ITEMS_LIMIT,
     )
 
-    inventory_page.add_items_to_cart(product_urls, config.MAX_PRICE)
-    assert_cart_total_not_exceeds(cart_page, config.MAX_PRICE, len(product_urls))
+    added_items = inventory_page.add_items_to_cart(product_urls, config.MAX_PRICE)
+    assert_cart_total_not_exceeds(cart_page, config.MAX_PRICE, len(added_items))
