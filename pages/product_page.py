@@ -72,7 +72,7 @@ class ProductPage(BasePage):
         except Exception:
             self._log("[Debug] Add to cart blocked — retrying with force click.")
             cart_btn.click(force=True, timeout=config.DEFAULT_TIMEOUT)
-        self.page.wait_for_timeout(800)
+        self.variants.wait_for_post_add_feedback()
 
         if self.variants.has_variant_selection_error():
             return False

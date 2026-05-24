@@ -2,7 +2,7 @@ import random
 import re
 
 import config
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Locator, Page, expect
 
 from pages.base_page import BasePage
 from utils.variant_helpers import (
@@ -36,6 +36,12 @@ class EbayVariantSelector(BasePage):
             re.IGNORECASE,
         )
         self._select_hint_text = re.compile(r":\s*select\b", re.IGNORECASE)
+        self._expanded_listbox_buttons = (
+            "button.listbox-button__control[aria-expanded='true']"
+        )
+        self._variant_controls_selector = (
+            f"{self._variation_listbox_buttons}, {self._legacy_variation_dropdowns}"
+        )
         self._variant_controls_cached: bool | None = None
 
     def _selection_applied(self, button: Locator) -> bool:
@@ -72,28 +78,89 @@ class EbayVariantSelector(BasePage):
             return True
         return self.page.get_by_text(self._select_hint_text).count() > 0
 
+    def _wait_for_listboxes_collapsed(self, timeout: int = config.SHORT_TIMEOUT) -> None:
+        if self.page.locator(self._expanded_listbox_buttons).count() == 0:
+            return
+        try:
+            self.page.wait_for_function(
+                "(selector) => document.querySelectorAll(selector).length === 0",
+                arg=self._expanded_listbox_buttons,
+                timeout=timeout,
+            )
+        except Exception:
+            pass
+
+    def _wait_for_listbox_open(
+        self, button: Locator, timeout: int = config.SHORT_TIMEOUT
+    ) -> bool:
+        if self._listbox_is_open(button):
+            return True
+        try:
+            self.page.wait_for_function(
+                "(el) => el && el.getAttribute('aria-expanded') === 'true'",
+                arg=button.element_handle(),
+                timeout=timeout,
+            )
+            return True
+        except Exception:
+            return self._listbox_is_open(button)
+
+    def _wait_for_native_selection(
+        self, button: Locator, native: Locator, timeout: int = config.SHORT_TIMEOUT
+    ) -> bool:
+        if self._native_selection_applied(button, native):
+            return True
+        try:
+            expect.poll(
+                lambda: self._native_selection_applied(button, native),
+                timeout=timeout,
+            ).to_be(True)
+            return True
+        except AssertionError:
+            return self._native_selection_applied(button, native)
+
+    def _wait_for_selection_applied(
+        self, button: Locator, timeout: int = config.SHORT_TIMEOUT
+    ) -> bool:
+        if self._selection_applied(button):
+            return True
+        try:
+            expect.poll(
+                lambda: self._selection_applied(button),
+                timeout=timeout,
+            ).to_be(True)
+            return True
+        except AssertionError:
+            return self._selection_applied(button)
+
+    def wait_for_post_add_feedback(self) -> None:
+        """Wait for overlays to close and optional variant-error banners to render."""
+        self._wait_for_listboxes_collapsed()
+        errors = self.page.locator(
+            "div.x-alert, div.ux-message, [role='alert'], .ux-call-to-action-variation"
+        ).filter(has_text=self._variant_error_text)
+        try:
+            errors.first.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
+        except Exception:
+            pass
+
     def _wait_for_variant_area(self) -> None:
         if self._count_variant_controls_now() > 0:
             return
         if not self._variant_hints_present():
             return
 
-        for _ in range(config.VARIANT_POLL_ATTEMPTS):
-            if self._count_variant_controls_now() > 0:
-                return
-            self.page.wait_for_timeout(config.VARIANT_POLL_INTERVAL_MS)
-
         try:
-            self.page.locator(self._sku_section).first.wait_for(
-                state="attached", timeout=config.VARIANT_SKU_WAIT_MS
+            self.page.locator(self._variant_controls_selector).first.wait_for(
+                state="attached", timeout=config.VARIANT_AREA_WAIT_MS
             )
         except Exception:
-            pass
-
-        for _ in range(config.VARIANT_POLL_ATTEMPTS):
-            if self._count_variant_controls_now() > 0:
-                return
-            self.page.wait_for_timeout(config.VARIANT_POLL_INTERVAL_MS)
+            try:
+                self.page.locator(self._sku_section).first.wait_for(
+                    state="attached", timeout=config.VARIANT_SKU_WAIT_MS
+                )
+            except Exception:
+                pass
 
     def _probe_variant_controls(self, *, use_cache: bool = True) -> bool:
         if use_cache and self._variant_controls_cached is not None:
@@ -180,7 +247,7 @@ class EbayVariantSelector(BasePage):
             self.page.locator("h1.x-item-title__mainTitle").click(timeout=1500)
         except Exception:
             pass
-        self.page.wait_for_timeout(200)
+        self._wait_for_listboxes_collapsed()
 
     def _collapse_listbox_if_open(self, button: Locator | None = None) -> None:
         """Close expanded listboxes only — no title click, no retry loop."""
@@ -211,26 +278,16 @@ class EbayVariantSelector(BasePage):
                 target.click(timeout=1500)
             except Exception:
                 pass
-        self.page.wait_for_timeout(150)
+        self._wait_for_listboxes_collapsed()
 
     def _open_listbox(self, button: Locator) -> bool:
         button.scroll_into_view_if_needed()
         button.click(timeout=config.DEFAULT_TIMEOUT)
-
-        for _ in range(30):
-            if self._listbox_is_open(button):
-                return True
-            self.page.wait_for_timeout(100)
-
-        if self._listbox_is_open(button):
+        if self._wait_for_listbox_open(button):
             return True
 
         button.click(timeout=config.DEFAULT_TIMEOUT)
-        for _ in range(15):
-            if self._listbox_is_open(button):
-                return True
-            self.page.wait_for_timeout(100)
-        return self._listbox_is_open(button)
+        return self._wait_for_listbox_open(button)
 
     def _find_listbox_button(self, controls_id: str) -> Locator | None:
         button = self.page.locator(
@@ -284,12 +341,7 @@ class EbayVariantSelector(BasePage):
         except Exception:
             native.select_option(index=idx)
 
-        for _ in range(15):
-            if self._native_selection_applied(button, native):
-                return True
-            self.page.wait_for_timeout(200)
-
-        return self._native_selection_applied(button, native)
+        return self._wait_for_native_selection(button, native)
 
     def _sync_listbox_choice(
         self, button: Locator, controls_id: str, choice: str
@@ -307,7 +359,7 @@ class EbayVariantSelector(BasePage):
                     except Exception:
                         native.select_option(index=i)
                     break
-            self.page.wait_for_timeout(350)
+            self._wait_for_native_selection(button, native)
             return self._native_selection_applied(button, native)
 
         panel = self.page.locator(f"#{controls_id}")
@@ -333,7 +385,7 @@ class EbayVariantSelector(BasePage):
             )
             break
 
-        self.page.wait_for_timeout(350)
+        self._wait_for_selection_applied(button)
         self._collapse_listbox_if_open(button)
         return self._selection_applied(button)
 
@@ -347,7 +399,7 @@ class EbayVariantSelector(BasePage):
         if self._click_locator_targets(
             option, option.locator(".listbox__option").first
         ):
-            self.page.wait_for_timeout(350)
+            self._wait_for_selection_applied(button)
             if self._selection_applied(button):
                 self._collapse_listbox_if_open(button)
                 return True
@@ -385,7 +437,7 @@ class EbayVariantSelector(BasePage):
                 applied = (button.text_content() or "").strip()
                 self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
                 self._collapse_listbox_if_open(button)
-                self.page.wait_for_timeout(400)
+                self._wait_for_listboxes_collapsed()
                 return True
 
         self._collapse_listbox_if_open()
@@ -416,7 +468,7 @@ class EbayVariantSelector(BasePage):
 
         if not single_variant:
             self._collapse_listbox_if_open()
-            self.page.wait_for_timeout(300)
+            self._wait_for_listboxes_collapsed()
 
         return self._try_ui_random_select(button, controls_id, label)
 
