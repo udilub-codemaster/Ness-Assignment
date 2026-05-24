@@ -1,12 +1,8 @@
 import re
 
 
-def extract_float_from_string(text: str) -> float:
-    """Parse the first numeric price from arbitrary text (symbols stripped)."""
-    return parse_currency_amount(text)
-
-
 def parse_currency_amount(text: str) -> float:
+    """Parse the first numeric price from arbitrary text (symbols stripped)."""
     if not text:
         raise ValueError("Cannot extract price from an empty string")
     cleaned_text = re.sub(r"[^\d.]", "", text)
