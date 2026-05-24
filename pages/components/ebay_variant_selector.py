@@ -114,7 +114,7 @@ class EbayVariantSelector(BasePage):
         name = (native.get_attribute("name") or "").lower()
         return "feedback" in name
 
-    def list_variation_buttons(self) -> list[Locator]:
+    def _list_variation_buttons(self) -> list[Locator]:
         buttons = self.page.locator(self._variation_listbox_buttons)
         variation_buttons = []
         for i in range(buttons.count()):
@@ -124,28 +124,25 @@ class EbayVariantSelector(BasePage):
             variation_buttons.append(button)
         return variation_buttons
 
-    def count_variant_listboxes(self) -> int:
-        return len(self.list_variation_buttons())
+    def _count_variant_listboxes(self) -> int:
+        return len(self._list_variation_buttons())
 
     def get_pending_variants(self) -> list[str]:
         pending = []
-        for button in self.list_variation_buttons():
+        for button in self._list_variation_buttons():
             if self._listbox_needs_selection(button):
                 pending.append((button.text_content() or "").strip())
         return pending
 
     def _get_pending_variant_targets(self) -> list[dict]:
         pending = []
-        for button in self.list_variation_buttons():
+        for button in self._list_variation_buttons():
             if not self._listbox_needs_selection(button):
                 continue
             text = (button.text_content() or "").strip()
-            value = (button.get_attribute("value") or "").strip()
             controls = button.get_attribute("aria-controls") or ""
             if controls:
-                pending.append(
-                    {"text": text, "value": value, "controls": controls}
-                )
+                pending.append({"text": text, "controls": controls})
         return pending
 
     def _listbox_is_open(self, button: Locator) -> bool:
@@ -249,7 +246,7 @@ class EbayVariantSelector(BasePage):
         if not self._listbox_needs_selection(button):
             return True
 
-        single_variant = self.count_variant_listboxes() == 1
+        single_variant = self._count_variant_listboxes() == 1
         native = self._get_native_select(button)
 
         if native is not None and self._select_via_native_select(button, label):
@@ -302,7 +299,7 @@ class EbayVariantSelector(BasePage):
 
     def _select_variants_via_playwright(self) -> int:
         selected = 0
-        max_rounds = max(10, self.count_variant_listboxes() * 3)
+        max_rounds = max(10, self._count_variant_listboxes() * 3)
 
         for round_num in range(1, max_rounds + 1):
             pending = self._get_pending_variant_targets()
@@ -510,7 +507,7 @@ class EbayVariantSelector(BasePage):
             self._log("[Debug] No variation controls on this listing.")
             return
 
-        total = self.count_variant_listboxes()
+        total = self._count_variant_listboxes()
         self._log(f"[Debug] Found {total} variant listbox(es) on this listing.")
 
         pw_selected = self._select_variants_via_playwright()
