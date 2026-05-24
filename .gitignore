@@ -39,6 +39,9 @@ logs/
 *.log
 screenshots/
 
+# Local Chromium profile (persistent browser data)
+user_data/
+
 # MCP / local browser tooling
 .playwright-mcp/
 
