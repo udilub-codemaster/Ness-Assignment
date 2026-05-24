@@ -50,10 +50,8 @@ The project follows a layered **Page Object Model (POM)** with separate **flow**
 ```mermaid
 flowchart TD
     T[test_e2e_flow.py] --> S[InventoryPage.search_items_by_name_under_price]
-    S --> S1[Search query]
-    S --> S2[Apply max-price filter]
-    S --> S3[Apply Buy It Now filter]
-    S --> S4[Paginate and collect product URLs]
+    S --> S1[Filtered search URL - one load]
+    S --> S2[Paginate and collect product URLs]
     T --> A[InventoryPage.add_items_to_cart]
     A --> F[AddItemsToCartFlow]
     F --> F1[Open each URL in a new tab]
@@ -63,7 +61,7 @@ flowchart TD
     V --> V2[get_cart_total and assert budget]
 ```
 
-1. **Search & filter** — `InventoryPage` searches eBay, applies a max-price filter (UI with code-level fallback), restricts to Buy It Now listings, and paginates until enough product URLs are collected.
+1. **Search & filter** — `InventoryPage` opens a single filtered search URL (`_nkw`, `LH_BIN=1`, `_udhi`), verifies params and sample results, then paginates until enough product URLs are collected.
 2. **Add to cart** — `AddItemsToCartFlow` opens each URL in a new tab, re-checks the price, handles variants where possible, and adds in-budget items until the target count is reached (or the URL pool is exhausted).
 3. **Verify cart** — `cart_verification_flow` navigates to the cart, reads the subtotal, saves a screenshot, and asserts the total does not exceed `max_price × items_added`.
 
