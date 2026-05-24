@@ -152,12 +152,12 @@ class EbayVariantSelector(BasePage):
 
         try:
             self.page.locator(self._variant_controls_selector).first.wait_for(
-                state="attached", timeout=config.VARIANT_AREA_WAIT_MS
+                state="attached", timeout=config.VARIANT_PICKER_WAIT_MS
             )
         except Exception:
             try:
                 self.page.locator(self._sku_section).first.wait_for(
-                    state="attached", timeout=config.VARIANT_SKU_WAIT_MS
+                    state="attached", timeout=config.VARIANT_OPTIONS_WAIT_MS
                 )
             except Exception:
                 pass
@@ -244,7 +244,9 @@ class EbayVariantSelector(BasePage):
         """Dismiss expanded SKU overlays before clicking elsewhere (e.g. Add to cart)."""
         self.page.keyboard.press("Escape")
         try:
-            self.page.locator("h1.x-item-title__mainTitle").click(timeout=1500)
+            self.page.locator("h1.x-item-title__mainTitle").click(
+                timeout=config.QUICK_CLICK_TIMEOUT
+            )
         except Exception:
             pass
         self._wait_for_listboxes_collapsed()
@@ -275,7 +277,7 @@ class EbayVariantSelector(BasePage):
                 if key in seen:
                     continue
                 seen.add(key)
-                target.click(timeout=1500)
+                target.click(timeout=config.QUICK_CLICK_TIMEOUT)
             except Exception:
                 pass
         self._wait_for_listboxes_collapsed()

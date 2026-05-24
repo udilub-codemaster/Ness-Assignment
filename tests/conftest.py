@@ -1,6 +1,8 @@
 import os
+
 import pytest
 from playwright.sync_api import Page
+
 from pages.cart_page import CartPage
 from pages.inventory_page import InventoryPage
 

@@ -23,14 +23,16 @@ class LoginPage(BasePage):
         self._username_input.wait_for(state="visible", timeout=config.DEFAULT_TIMEOUT)
         self._username_input.fill(username)
         
-        self._continue_button.click()
-        
+        self._continue_button.click(timeout=config.DEFAULT_TIMEOUT)
+
         try:
             self._password_input.wait_for(state="visible", timeout=config.DEFAULT_TIMEOUT)
             self._password_input.fill(password)
-            
-            self._sign_in_button.click()
-            self.page.wait_for_load_state(config.PAGE_LOADED_INDICATOR)
+
+            self._sign_in_button.click(timeout=config.DEFAULT_TIMEOUT)
+            self.page.wait_for_load_state(
+                config.PAGE_LOADED_INDICATOR, timeout=config.LONG_TIMEOUT
+            )
             self._log("[Auth] Login form submitted successfully.")
             
         except Exception as e:

@@ -25,5 +25,5 @@ class BasePage(EbayPageMixin):
         kwargs.setdefault("timeout", config.LONG_TIMEOUT)
         self.page.goto(url, **kwargs)
 
-    def click_element(self, locator: str) -> None:
-        self.page.locator(locator).click()
+    def click_element(self, locator: str, timeout: int = config.DEFAULT_TIMEOUT) -> None:
+        self.page.locator(locator).click(timeout=timeout)
