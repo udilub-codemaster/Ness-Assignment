@@ -34,6 +34,13 @@ class CartPage(BasePage):
             "text=Your cart is empty"
         )
 
+    def _wait_for_cart_content(self) -> None:
+        summary_selector = ", ".join(self._SUMMARY_SECTIONS)
+        cart_body = self.page.locator(summary_selector).or_(
+            self.page.locator(self._empty_cart_text)
+        )
+        cart_body.first.wait_for(state="visible", timeout=config.DEFAULT_TIMEOUT)
+
     def open_cart_via_header(self) -> bool:
         try:
             cart_link = self.page.locator(self._cart_icon_link).first
@@ -41,7 +48,7 @@ class CartPage(BasePage):
             self._log("[CartPage] Opening cart via header cart link...")
             cart_link.click(timeout=config.DEFAULT_TIMEOUT)
             self.page.wait_for_load_state("load", timeout=config.LONG_TIMEOUT)
-            self.page.wait_for_timeout(1500)
+            self._wait_for_cart_content()
             return self.is_ebay_cart_url() and not self.is_ebay_error_page()
         except Exception as exc:
             self._log(f"[CartPage] Header cart navigation failed: {exc}")
@@ -51,7 +58,7 @@ class CartPage(BasePage):
         for cart_url in self._CART_URLS:
             self._log(f"[CartPage] Navigating to cart: {cart_url}")
             self.page.goto(cart_url, wait_until="load", timeout=config.LONG_TIMEOUT)
-            self.page.wait_for_timeout(1500)
+            self._wait_for_cart_content()
             if self.is_ebay_error_page():
                 self._log(f"[Warning] Cart URL redirected to error page: {self.page.url}")
                 continue
