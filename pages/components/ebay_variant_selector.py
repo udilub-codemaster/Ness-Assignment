@@ -232,191 +232,14 @@ class EbayVariantSelector(BasePage):
             self.page.wait_for_timeout(100)
         return self._listbox_is_open(button)
 
-    def _select_variant_playwright(self, controls_id: str, label: str) -> bool:
+    def _find_listbox_button(self, controls_id: str) -> Locator | None:
         button = self.page.locator(
             f"button.listbox-button__control[aria-controls='{controls_id}']"
         )
-        if button.count() == 0:
-            self._log(
-                f"[Debug] Listbox '{label}': button not found for panel #{controls_id}"
-            )
-            return False
+        return button.first if button.count() > 0 else None
 
-        button = button.first
-        if not self._listbox_needs_selection(button):
-            return True
-
-        single_variant = self._count_variant_listboxes() == 1
-        native = self._get_native_select(button)
-
-        if native is not None and self._select_via_native_select(button, label):
-            return True
-
-        if native is not None and self._native_selection_applied(button, native):
-            return True
-
-        if single_variant and native is not None:
-            self._log(
-                f"[Debug] Listbox '{label}': native select failed on single-variant listing"
-            )
-            return False
-
-        if not single_variant:
-            self._collapse_listbox_if_open()
-            self.page.wait_for_timeout(300)
-
-        if not self._open_listbox(button):
-            self._log(f"[Debug] Listbox '{label}': could not expand dropdown")
-            return False
-
-        panel = self.page.locator(f"#{controls_id}")
-        try:
-            panel.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
-        except Exception:
-            pass
-
-        valid = self._collect_valid_listbox_options(panel)
-        if not valid:
-            self._log(
-                f"[Debug] Listbox '{label}': no visible options in panel #{controls_id}"
-            )
-            self._collapse_listbox_if_open()
-            return False
-
-        random.shuffle(valid)
-        for option, choice in valid:
-            self._log(f"[Debug] Listbox '{label}': selecting '{choice}' (Playwright)")
-            if self._activate_listbox_option(button, controls_id, option, choice):
-                applied = (button.text_content() or "").strip()
-                self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                self._collapse_listbox_if_open(button)
-                self.page.wait_for_timeout(400)
-                return True
-
-        self._collapse_listbox_if_open()
-        self._log(f"[Debug] Listbox '{label}': option click did not apply")
-        return False
-
-    def _select_variants_via_playwright(self) -> int:
-        selected = 0
-        max_rounds = max(10, self._count_variant_listboxes() * 3)
-
-        for round_num in range(1, max_rounds + 1):
-            pending = self._get_pending_variant_targets()
-            if not pending:
-                break
-
-            pending.sort(key=lambda target: variant_sort_key(target["text"]))
-            self._log(
-                f"[Debug] Variant round {round_num}: "
-                f"{len(pending)} unselected — {[p['text'] for p in pending]}"
-            )
-
-            for target in pending:
-                label = target["text"]
-                controls_id = target["controls"]
-                button = self.page.locator(
-                    f"button.listbox-button__control[aria-controls='{controls_id}']"
-                ).first
-                if not self._listbox_needs_selection(button):
-                    continue
-                if self._select_variant_playwright(controls_id, label):
-                    selected += 1
-
-        return selected
-
-    def _collect_valid_listbox_options(
-        self, listbox: Locator
-    ) -> list[tuple[Locator, str]]:
-        valid = []
-        options = listbox.locator("[role='option'], .listbox__option")
-        for i in range(options.count()):
-            option = options.nth(i)
-            try:
-                if not option.is_visible():
-                    continue
-            except Exception:
-                pass
-            option_text = normalize_option_text(option.text_content() or "")
-            if is_valid_variant_option(option_text):
-                valid.append((option, option_text))
-        return valid
-
-    def _get_native_select(self, button: Locator) -> Locator | None:
-        container = button.locator(
-            "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
-        )
-        native = container.locator("select.listbox__native")
-        if native.count() == 0:
-            return None
-        return native.first
-
-    def _sync_listbox_selection(
-        self, button: Locator, controls_id: str, choice: str
-    ) -> bool:
-        want = normalize_option_text(choice)
-        native = self._get_native_select(button)
-        if native is not None:
-            native_options = native.locator("option")
-            for i in range(native_options.count()):
-                option = native_options.nth(i)
-                label = normalize_option_text(option.text_content() or "")
-                if label == want or want in label:
-                    try:
-                        native.select_option(index=i, force=True)
-                    except Exception:
-                        native.select_option(index=i)
-                    break
-            self.page.wait_for_timeout(350)
-            return self._native_selection_applied(button, native)
-
-        panel = self.page.locator(f"#{controls_id}")
-        if panel.count() == 0:
-            return False
-
-        if button.get_attribute("aria-expanded") != "true":
-            self._open_listbox(button)
-
-        options = panel.locator("[role='option'], .listbox__option")
-        for i in range(options.count()):
-            option = options.nth(i)
-            try:
-                if not option.is_visible():
-                    continue
-            except Exception:
-                pass
-            opt_text = normalize_option_text(option.text_content() or "")
-            if opt_text != want and want not in opt_text:
-                continue
-            for target in (option, option.locator(".listbox__option").first):
-                if target.count() == 0:
-                    continue
-                try:
-                    target.click(timeout=config.DEFAULT_TIMEOUT)
-                except Exception:
-                    try:
-                        target.click(force=True, timeout=config.DEFAULT_TIMEOUT)
-                    except Exception:
-                        continue
-                break
-            break
-
-        self.page.wait_for_timeout(350)
-        self._collapse_listbox_if_open(button)
-        return self._selection_applied(button)
-
-    def _activate_listbox_option(
-        self,
-        button: Locator,
-        controls_id: str,
-        option: Locator,
-        choice: str,
-    ) -> bool:
-        click_targets = [
-            option,
-            option.locator(".listbox__option").first,
-        ]
-        for target in click_targets:
+    def _click_locator_targets(self, *targets: Locator) -> bool:
+        for target in targets:
             if target.count() == 0:
                 continue
             try:
@@ -427,21 +250,12 @@ class EbayVariantSelector(BasePage):
                     target.click(force=True, timeout=config.DEFAULT_TIMEOUT)
                 except Exception:
                     continue
-            self.page.wait_for_timeout(350)
-            if self._selection_applied(button):
-                self._collapse_listbox_if_open(button)
-                return True
-
-        if self._sync_listbox_selection(button, controls_id, choice):
-            return self._selection_applied(button)
-
+            return True
         return False
 
-    def _select_via_native_select(self, button: Locator, label: str) -> bool:
-        native = self._get_native_select(button)
-        if native is None:
-            return False
-
+    def _try_native_random_select(
+        self, button: Locator, label: str, native: Locator
+    ) -> bool:
         if self._native_selection_applied(button, native):
             return True
 
@@ -476,6 +290,186 @@ class EbayVariantSelector(BasePage):
             self.page.wait_for_timeout(200)
 
         return self._native_selection_applied(button, native)
+
+    def _sync_listbox_choice(
+        self, button: Locator, controls_id: str, choice: str
+    ) -> bool:
+        want = normalize_option_text(choice)
+        native = self._get_native_select(button)
+        if native is not None:
+            native_options = native.locator("option")
+            for i in range(native_options.count()):
+                option = native_options.nth(i)
+                option_label = normalize_option_text(option.text_content() or "")
+                if option_label == want or want in option_label:
+                    try:
+                        native.select_option(index=i, force=True)
+                    except Exception:
+                        native.select_option(index=i)
+                    break
+            self.page.wait_for_timeout(350)
+            return self._native_selection_applied(button, native)
+
+        panel = self.page.locator(f"#{controls_id}")
+        if panel.count() == 0:
+            return False
+
+        if button.get_attribute("aria-expanded") != "true":
+            self._open_listbox(button)
+
+        options = panel.locator("[role='option'], .listbox__option")
+        for i in range(options.count()):
+            option = options.nth(i)
+            try:
+                if not option.is_visible():
+                    continue
+            except Exception:
+                pass
+            opt_text = normalize_option_text(option.text_content() or "")
+            if opt_text != want and want not in opt_text:
+                continue
+            self._click_locator_targets(
+                option, option.locator(".listbox__option").first
+            )
+            break
+
+        self.page.wait_for_timeout(350)
+        self._collapse_listbox_if_open(button)
+        return self._selection_applied(button)
+
+    def _apply_listbox_choice(
+        self,
+        button: Locator,
+        controls_id: str,
+        option: Locator,
+        choice: str,
+    ) -> bool:
+        if self._click_locator_targets(
+            option, option.locator(".listbox__option").first
+        ):
+            self.page.wait_for_timeout(350)
+            if self._selection_applied(button):
+                self._collapse_listbox_if_open(button)
+                return True
+
+        if self._sync_listbox_choice(button, controls_id, choice):
+            return self._selection_applied(button)
+
+        return False
+
+    def _try_ui_random_select(
+        self, button: Locator, controls_id: str, label: str
+    ) -> bool:
+        if not self._open_listbox(button):
+            self._log(f"[Debug] Listbox '{label}': could not expand dropdown")
+            return False
+
+        panel = self.page.locator(f"#{controls_id}")
+        try:
+            panel.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
+        except Exception:
+            pass
+
+        valid = self._collect_valid_listbox_options(panel)
+        if not valid:
+            self._log(
+                f"[Debug] Listbox '{label}': no visible options in panel #{controls_id}"
+            )
+            self._collapse_listbox_if_open()
+            return False
+
+        random.shuffle(valid)
+        for option, choice in valid:
+            self._log(f"[Debug] Listbox '{label}': selecting '{choice}'")
+            if self._apply_listbox_choice(button, controls_id, option, choice):
+                applied = (button.text_content() or "").strip()
+                self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
+                self._collapse_listbox_if_open(button)
+                self.page.wait_for_timeout(400)
+                return True
+
+        self._collapse_listbox_if_open()
+        self._log(f"[Debug] Listbox '{label}': option click did not apply")
+        return False
+
+    def _select_random_for_listbox(self, button: Locator, label: str) -> bool:
+        """Pick a random valid option for one variant listbox."""
+        if not self._listbox_needs_selection(button):
+            return True
+
+        controls_id = button.get_attribute("aria-controls") or ""
+        if not controls_id:
+            return False
+
+        native = self._get_native_select(button)
+        if native is not None and self._try_native_random_select(button, label, native):
+            return True
+        if native is not None and self._native_selection_applied(button, native):
+            return True
+
+        single_variant = self._count_variant_listboxes() == 1
+        if single_variant and native is not None:
+            self._log(
+                f"[Debug] Listbox '{label}': native select failed on single-variant listing"
+            )
+            return False
+
+        if not single_variant:
+            self._collapse_listbox_if_open()
+            self.page.wait_for_timeout(300)
+
+        return self._try_ui_random_select(button, controls_id, label)
+
+    def _select_variants_via_playwright(self) -> int:
+        selected = 0
+        max_rounds = max(10, self._count_variant_listboxes() * 3)
+
+        for round_num in range(1, max_rounds + 1):
+            pending = self._get_pending_variant_targets()
+            if not pending:
+                break
+
+            pending.sort(key=lambda target: variant_sort_key(target["text"]))
+            self._log(
+                f"[Debug] Variant round {round_num}: "
+                f"{len(pending)} unselected — {[p['text'] for p in pending]}"
+            )
+
+            for target in pending:
+                label = target["text"]
+                button = self._find_listbox_button(target["controls"])
+                if button is None or not self._listbox_needs_selection(button):
+                    continue
+                if self._select_random_for_listbox(button, label):
+                    selected += 1
+
+        return selected
+
+    def _collect_valid_listbox_options(
+        self, listbox: Locator
+    ) -> list[tuple[Locator, str]]:
+        valid = []
+        options = listbox.locator("[role='option'], .listbox__option")
+        for i in range(options.count()):
+            option = options.nth(i)
+            try:
+                if not option.is_visible():
+                    continue
+            except Exception:
+                pass
+            option_text = normalize_option_text(option.text_content() or "")
+            if is_valid_variant_option(option_text):
+                valid.append((option, option_text))
+        return valid
+
+    def _get_native_select(self, button: Locator) -> Locator | None:
+        container = button.locator(
+            "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
+        )
+        native = container.locator("select.listbox__native")
+        if native.count() == 0:
+            return None
+        return native.first
 
     def _select_random_legacy_dropdowns(self) -> int:
         dropdowns = self.page.locator(self._legacy_variation_dropdowns)
