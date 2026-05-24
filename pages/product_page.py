@@ -5,7 +5,7 @@ from playwright.sync_api import Page
 
 from pages.base_page import BasePage
 from pages.components.ebay_variant_selector import EbayVariantSelector
-from utils.string_helpers import extract_float_from_string
+from utils.string_helpers import parse_currency_amount
 
 
 class ProductPage(BasePage):
@@ -33,18 +33,10 @@ class ProductPage(BasePage):
             state="visible", timeout=config.DEFAULT_TIMEOUT
         )
         raw_price = self.page.locator(self._product_price).first.text_content()
-        return extract_float_from_string(raw_price)
+        return parse_currency_amount(raw_price)
 
     def get_pending_variants(self) -> list[str]:
         return self.variants.get_pending_variants()
-
-    def has_add_to_cart(self) -> bool:
-        cart_btn = self.page.locator(self._add_to_cart_button).first
-        try:
-            cart_btn.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
-            return True
-        except Exception:
-            return False
 
     def is_auction_only_listing(self) -> bool:
         place_bid = self.page.get_by_role(

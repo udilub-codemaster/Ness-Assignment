@@ -53,18 +53,6 @@ class EbayVariantSelector(BasePage):
             return False
         return True
 
-    def _get_listbox_panel(self, button: Locator) -> Locator:
-        controls_id = button.get_attribute("aria-controls")
-        if controls_id:
-            return self.page.locator(f"#{controls_id}")
-        container = button.locator(
-            "xpath=ancestor::div[contains(@class,'listbox-button')][1]"
-        )
-        panel = container.locator("[role='listbox']")
-        if panel.count() > 0:
-            return panel.first
-        return self.page.locator(f"{self._sku_section} [role='listbox']").first
-
     def _invalidate_variant_cache(self) -> None:
         self._variant_controls_cached = None
 
@@ -160,14 +148,7 @@ class EbayVariantSelector(BasePage):
                 )
         return pending
 
-    def _get_listbox_panel_for_button(self, button: Locator) -> Locator | None:
-        controls_id = button.get_attribute("aria-controls")
-        if not controls_id:
-            return None
-        panel = self.page.locator(f"#{controls_id}")
-        return panel if panel.count() > 0 else None
-
-    def _listbox_is_open(self, button: Locator, panel: Locator | None) -> bool:
+    def _listbox_is_open(self, button: Locator) -> bool:
         # x-msku-evo keeps option nodes visible when collapsed; aria-expanded is reliable.
         return button.get_attribute("aria-expanded") == "true"
 
@@ -235,28 +216,24 @@ class EbayVariantSelector(BasePage):
                 pass
         self.page.wait_for_timeout(150)
 
-    def _close_open_listboxes(self) -> None:
-        self._collapse_listbox_if_open()
-
     def _open_listbox(self, button: Locator) -> bool:
-        panel = self._get_listbox_panel_for_button(button)
         button.scroll_into_view_if_needed()
         button.click(timeout=config.DEFAULT_TIMEOUT)
 
         for _ in range(30):
-            if self._listbox_is_open(button, panel):
+            if self._listbox_is_open(button):
                 return True
             self.page.wait_for_timeout(100)
 
-        if self._listbox_is_open(button, panel):
+        if self._listbox_is_open(button):
             return True
 
         button.click(timeout=config.DEFAULT_TIMEOUT)
         for _ in range(15):
-            if self._listbox_is_open(button, panel):
+            if self._listbox_is_open(button):
                 return True
             self.page.wait_for_timeout(100)
-        return self._listbox_is_open(button, panel)
+        return self._listbox_is_open(button)
 
     def _select_variant_playwright(self, controls_id: str, label: str) -> bool:
         button = self.page.locator(
@@ -288,7 +265,7 @@ class EbayVariantSelector(BasePage):
             return False
 
         if not single_variant:
-            self._close_open_listboxes()
+            self._collapse_listbox_if_open()
             self.page.wait_for_timeout(300)
 
         if not self._open_listbox(button):
@@ -306,7 +283,7 @@ class EbayVariantSelector(BasePage):
             self._log(
                 f"[Debug] Listbox '{label}': no visible options in panel #{controls_id}"
             )
-            self._close_open_listboxes()
+            self._collapse_listbox_if_open()
             return False
 
         random.shuffle(valid)
@@ -319,7 +296,7 @@ class EbayVariantSelector(BasePage):
                 self.page.wait_for_timeout(400)
                 return True
 
-        self._close_open_listboxes()
+        self._collapse_listbox_if_open()
         self._log(f"[Debug] Listbox '{label}': option click did not apply")
         return False
 
@@ -463,45 +440,6 @@ class EbayVariantSelector(BasePage):
 
         return False
 
-    def _select_via_listbox_ui(self, button: Locator, label: str) -> bool:
-        if not self._listbox_needs_selection(button):
-            return True
-
-        listbox = self._get_listbox_panel(button)
-        controls_id = button.get_attribute("aria-controls") or ""
-        single_variant = self.count_variant_listboxes() == 1
-
-        if not single_variant:
-            self._close_open_listboxes()
-            self.page.wait_for_timeout(300)
-
-        if not self._open_listbox(button):
-            return False
-
-        valid = self._collect_valid_listbox_options(listbox)
-        if not valid:
-            self._log(
-                f"[Debug] Listbox '{label}': no options in panel "
-                f"#{button.get_attribute('aria-controls')}."
-            )
-            self._close_open_listboxes()
-            return False
-
-        random.shuffle(valid)
-        for option, choice in valid:
-            self._log(f"[Debug] Listbox '{label}': selecting '{choice}'")
-            if controls_id and self._activate_listbox_option(
-                button, controls_id, option, choice
-            ):
-                applied = (button.text_content() or "").strip()
-                self._log(f"[Debug] Listbox '{label}': applied -> '{applied}'")
-                self._collapse_listbox_if_open(button)
-                return True
-
-        self._close_open_listboxes()
-        self._log(f"[Debug] Listbox '{label}': UI click did not apply.")
-        return False
-
     def _select_via_native_select(self, button: Locator, label: str) -> bool:
         native = self._get_native_select(button)
         if native is None:
@@ -541,20 +479,6 @@ class EbayVariantSelector(BasePage):
             self.page.wait_for_timeout(200)
 
         return self._native_selection_applied(button, native)
-
-    def _select_random_listbox_option(self, button: Locator, label: str) -> bool:
-        if not self._listbox_needs_selection(button):
-            self._log(f"[Debug] Listbox '{label}' already has a value, skipping.")
-            return False
-
-        strategies = (self._select_via_native_select, self._select_via_listbox_ui)
-
-        for attempt in range(2):
-            for strategy in strategies:
-                if strategy(button, label):
-                    return True
-            self._log(f"[Debug] Listbox '{label}': retry {attempt + 2}/2")
-        return False
 
     def _select_random_legacy_dropdowns(self) -> int:
         dropdowns = self.page.locator(self._legacy_variation_dropdowns)

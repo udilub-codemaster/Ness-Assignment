@@ -5,7 +5,7 @@ from playwright.sync_api import Page
 
 from pages.base_page import BasePage
 from utils.price_parser import CURRENCY_PATTERN, parse_subtotal_from_summary
-from utils.string_helpers import extract_float_from_string
+from utils.string_helpers import parse_currency_amount
 
 
 class CartPage(BasePage):
@@ -117,7 +117,7 @@ class CartPage(BasePage):
             raw = (currency_nodes.nth(index).inner_text() or "").strip()
             if re.search(r"\d", raw):
                 try:
-                    value = extract_float_from_string(raw)
+                    value = parse_currency_amount(raw)
                     self._log(f"[CartPage] Fallback currency node: '{raw}' -> ${value}")
                     return value
                 except ValueError:
