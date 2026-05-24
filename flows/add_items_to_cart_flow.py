@@ -52,8 +52,6 @@ class AddItemsToCartFlow:
                     reason = "pending_variants" if pending else "add_to_cart_failed"
                     BasePage._log(f"[Warning] Skipped — {reason}")
                     continue
-                product_page.variants._wait_for_listboxes_collapsed()
-                product_page.get_product_title()
                 screenshot_path = (
                     f"logs/screenshots/item_{len(verified_products) + 1}_added.png"
                 )

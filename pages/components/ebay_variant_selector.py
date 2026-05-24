@@ -133,17 +133,6 @@ class EbayVariantSelector(BasePage):
         except AssertionError:
             return self._selection_applied(button)
 
-    def wait_for_post_add_feedback(self) -> None:
-        """Wait for overlays to close and optional variant-error banners to render."""
-        self._wait_for_listboxes_collapsed()
-        errors = self.page.locator(
-            "div.x-alert, div.ux-message, [role='alert'], .ux-call-to-action-variation"
-        ).filter(has_text=self._variant_error_text)
-        try:
-            errors.first.wait_for(state="visible", timeout=config.SHORT_TIMEOUT)
-        except Exception:
-            pass
-
     def _wait_for_variant_area(self) -> None:
         if self._count_variant_controls_now() > 0:
             return

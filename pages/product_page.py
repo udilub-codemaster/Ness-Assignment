@@ -20,6 +20,9 @@ class ProductPage(BasePage):
             "button:has-text('Add to cart'), "
             "button:has-text('Add to basket')"
         )
+        self._added_to_cart_popup = re.compile(
+            r"added to (cart|basket)", re.IGNORECASE
+        )
         self.variants = EbayVariantSelector(page)
 
     def get_product_title(self) -> str:
@@ -72,12 +75,15 @@ class ProductPage(BasePage):
         except Exception:
             self._log("[Debug] Add to cart blocked — retrying with force click.")
             cart_btn.click(force=True, timeout=config.DEFAULT_TIMEOUT)
-        self.variants.wait_for_post_add_feedback()
 
-        if self.variants.has_variant_selection_error():
-            return False
-
-        return True
+        popup = self.page.get_by_role("dialog").filter(
+            has_text=self._added_to_cart_popup
+        ).first
+        try:
+            popup.wait_for(state="visible", timeout=config.DEFAULT_TIMEOUT)
+            return True
+        except Exception:
+            return not self.variants.has_variant_selection_error()
 
     def add_to_cart(self) -> bool:
         self.variants.select_all_random()
