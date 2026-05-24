@@ -13,7 +13,7 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-Create a `.env` file with `EBAY_URL`, `EBAY_USERNAME`, and `EBAY_PASSWORD` if login is required.
+Copy `.env.example` to `.env` and set `EBAY_URL`, `EBAY_USERNAME`, and `EBAY_PASSWORD` if login is required.
 
 ## Run tests
 
