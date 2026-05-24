@@ -48,7 +48,7 @@ class AddItemsToCartFlow:
                     )
                     continue
                 if not product_page.add_to_cart():
-                    pending = product_page.get_pending_variants()
+                    pending = product_page.variants.get_pending_variants()
                     reason = "pending_variants" if pending else "add_to_cart_failed"
                     BasePage._log(f"[Warning] Skipped — {reason}")
                     continue

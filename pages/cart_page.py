@@ -5,7 +5,7 @@ from playwright.sync_api import Page
 
 from pages.base_page import BasePage
 from utils.price_parser import CURRENCY_PATTERN, parse_subtotal_from_summary
-from utils.string_helpers import parse_currency_amount
+from utils.price_parser import parse_currency_amount
 
 
 class CartPage(BasePage):
