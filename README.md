@@ -23,6 +23,10 @@ pytest tests/test_e2e_flow.py
 
 Test data is loaded from `data/test_data.json` (search query, max price, item limit).
 
+## AI bug review
+
+The assignment’s static code-review task (identify buggy AI-generated test code and propose fixes) is documented in [`ReadMeAIBugs.md`](ReadMeAIBugs.md). It covers five issues — mixed Selenium/Playwright imports, missing browser lifecycle management, hard-coded sleeps, missing assertions, and fragile teardown — with explanations and corrected code samples.
+
 ## Test reports
 
 Each run writes reports under `reports/` (gitignored):

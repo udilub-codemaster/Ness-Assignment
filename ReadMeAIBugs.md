@@ -1,4 +1,6 @@
-# Code review assignment
+# AI-generated code review
+
+Static review of buggy test automation code (Selenium/Playwright mix). Identifies at least three issues and proposed fixes, per the assignment brief.
 
 ## There are a few problems in the provided code that can cause issues
 
